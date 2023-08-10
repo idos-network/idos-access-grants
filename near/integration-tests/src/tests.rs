@@ -22,21 +22,32 @@ async fn main() -> anyhow::Result<()> {
         .into_result()?;
 
     // begin tests
-    test_something(&alice, &contract).await?;
+    test_grants_for(&alice, &contract).await?;
     Ok(())
 }
 
-async fn test_something(
+async fn test_grants_for(
     user: &Account,
     contract: &Contract,
 ) -> anyhow::Result<()> {
-    user
+    let mut grants;
+
+    grants = user
         .call( contract.id(), "grants_for")
         .args_json(json!({"grantee": "julio.near", "data_id": "42"}))
         .transact()
         .await?;
 
-    assert_eq!(0, 0);
-    println!("      Passed ✅ test something");
+    assert!(grants.is_success());
+
+    grants = user
+        .call( contract.id(), "grants_for")
+        .args_json(json!({"grantee": "julio.near"}))
+        .transact()
+        .await?;
+
+    assert!(grants.is_failure());
+
+    println!("      Passed ✅ test grants_for");
     Ok(())
 }

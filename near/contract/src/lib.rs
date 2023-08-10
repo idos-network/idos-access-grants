@@ -105,8 +105,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_something() {
-        let contract = FractalRegistry::default();
-        assert_eq!(0, 0);
+    fn test_grants_for() {
+        let grants = FractalRegistry::grants_for(
+            AccountId::new_unchecked("julio.near".to_string()),
+            "20".to_string(),
+        );
+        assert_eq!(grants[0].grantee.as_str(), "julio.near");
+        assert_eq!(grants[0].data_id, "20");
     }
 }
