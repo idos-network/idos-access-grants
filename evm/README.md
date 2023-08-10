@@ -1,0 +1,5 @@
+# EVM
+
+```
+$ npx hardhat test
+```
