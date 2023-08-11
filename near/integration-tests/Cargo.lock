@@ -1086,6 +1086,7 @@ dependencies = [
  "maplit",
  "near-units",
  "pkg-config",
+ "serde",
  "serde_json",
  "tokio",
  "tracing",

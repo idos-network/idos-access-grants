@@ -1,7 +1,14 @@
 use std::{env, fs};
 use near_units::parse_near;
+use serde::Deserialize;
 use serde_json::json;
 use workspaces::{Account, Contract};
+
+#[derive(Deserialize)]
+pub struct Grant {
+    grantee: String,
+    data_id: String,
+}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -30,23 +37,30 @@ async fn test_grants_for(
     user: &Account,
     contract: &Contract,
 ) -> anyhow::Result<()> {
-    let mut grants;
+    let mut execution_result;
 
-    grants = user
+    execution_result = user
         .call( contract.id(), "grants_for")
         .args_json(json!({"grantee": "julio.near", "data_id": "42"}))
         .transact()
         .await?;
 
-    assert!(grants.is_success());
+    assert!(execution_result.is_success());
 
-    grants = user
+    let grants = execution_result.json::<Vec<Grant>>()?;
+
+    assert_eq!(grants.len(), 1);
+
+    assert_eq!(grants[0].grantee, "julio.near");
+    assert_eq!(grants[0].data_id, "42");
+
+    execution_result = user
         .call( contract.id(), "grants_for")
         .args_json(json!({"grantee": "julio.near"}))
         .transact()
         .await?;
 
-    assert!(grants.is_failure());
+    assert!(execution_result.is_failure());
 
     println!("      Passed ✅ test grants_for");
     Ok(())
