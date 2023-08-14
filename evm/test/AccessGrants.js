@@ -11,13 +11,12 @@ describe("AccessGrants", function () {
     const AccessGrants = await ethers.getContractFactory("AccessGrants");
     const accessGrants = await AccessGrants.deploy();
 
-    await accessGrants.connect(signer1).insert_grant(signer2, "1A");
-    await accessGrants.connect(signer1).insert_grant(signer2, "1B");
-    await accessGrants.connect(signer1).insert_grant(signer3, "1A");
+    await accessGrants.connect(signer1).insert_grant(signer2, "1A", 0);
+    await accessGrants.connect(signer1).insert_grant(signer2, "1B", 0);
+    await accessGrants.connect(signer1).insert_grant(signer3, "1A", 0);
 
-    await accessGrants.connect(signer2).insert_grant(signer1, "2A");
-    await accessGrants.connect(signer2).insert_grant(signer3, "2A");
-
+    await accessGrants.connect(signer2).insert_grant(signer1, "2A", 0);
+    await accessGrants.connect(signer2).insert_grant(signer3, "2A", 0);
 
     return { accessGrants, signer1, signer2, signer3, signer4 };
   }
@@ -27,9 +26,7 @@ describe("AccessGrants", function () {
       it("A grant can only be owned by its creator", async function () {
         const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
 
-        await accessGrants.connect(owner).insert_grant(grantee, "some ID");
-
-        let grants = await accessGrants.grants_by(owner, grantee, "some ID");
+        let grants = await accessGrants.grants_by(owner, grantee, "1A");
 
         expect(grants.length).to.equal(1);
         expect(grants[0].owner).to.equal(owner.address);
@@ -39,7 +36,7 @@ describe("AccessGrants", function () {
         const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
 
         await expect(
-          accessGrants.connect(owner).insert_grant(grantee, "1A")
+          accessGrants.connect(owner).insert_grant(grantee, "1A", 0)
         ).to.be.revertedWith("Grant already exists");
       });
     });
@@ -48,18 +45,17 @@ describe("AccessGrants", function () {
       it("A grant can be deleted by its owner", async function () {
         const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
 
-        await accessGrants.connect(owner).insert_grant(grantee, "some ID");
-        await accessGrants.connect(owner).delete_grant(grantee, "some ID");
+        await accessGrants.connect(owner).insert_grant(grantee, "some ID", 0);
 
-        let grants = await accessGrants.grants_by(owner, grantee, "some ID");
-
-        expect(grants.length).to.equal(0);
+        await expect(
+          accessGrants.connect(owner).delete_grant(grantee, "some ID")
+        ).to.not.be.revertedWith("Grant already exists");
       });
 
       it("A grant cannot be deleted by anyone else", async function () {
         const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
 
-        await accessGrants.connect(owner).insert_grant(grantee, "some ID");
+        await accessGrants.connect(owner).insert_grant(grantee, "some ID", 0);
 
         await expect(
           accessGrants.connect(grantee).delete_grant(grantee, "some ID")
@@ -69,6 +65,38 @@ describe("AccessGrants", function () {
 
         expect(grants.length).to.equal(1);
       });
+
+      describe("Timelocks", function () {
+        it("A grant cannot be deleted while locked", async function () {
+          const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
+
+          let timeNow = (await ethers.provider.getBlock()).timestamp;
+
+          await accessGrants.connect(owner).insert_grant(grantee, "some ID", timeNow + 1000);
+          await expect(
+            accessGrants.connect(owner).delete_grant(grantee, "some ID")
+          ).to.be.revertedWith("Grant is timelocked");
+
+          let grants = await accessGrants.grants_by(owner, grantee, "some ID");
+
+          expect(grants.length).to.equal(1);
+        });
+
+        it("A grant can be deleted if timelock is expired", async function () {
+          const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
+
+          let timeNow = (await ethers.provider.getBlock()).timestamp;
+
+          await accessGrants.connect(owner).insert_grant(grantee, "some ID", timeNow - 1000);
+          await expect(
+            accessGrants.connect(owner).delete_grant(grantee, "some ID")
+          ).to.not.be.revertedWith("Grant is timelocked");
+
+          let grants = await accessGrants.grants_by(owner, grantee, "some ID");
+
+          expect(grants.length).to.equal(0);
+        });
+      });
     });
 
     describe("Reading grants", function () {
@@ -77,7 +105,7 @@ describe("AccessGrants", function () {
           it("Returns no grants", async function () {
             const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
 
-            await accessGrants.connect(owner).insert_grant(grantee, "some ID");
+            await accessGrants.connect(owner).insert_grant(grantee, "some ID", 0);
 
             let grants = await accessGrants.grants_for(grantee, "bad ID");
 
@@ -90,7 +118,7 @@ describe("AccessGrants", function () {
           it("Returns the grant, regardless of caller", async function () {
             const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
 
-            await accessGrants.connect(owner).insert_grant(grantee, "some ID");
+            await accessGrants.connect(owner).insert_grant(grantee, "some ID", 0);
 
             let grants1 = await accessGrants.connect(owner).grants_for(grantee, "some ID");
             let grants2 = await accessGrants.connect(grantee).grants_for(grantee, "some ID");
@@ -109,7 +137,7 @@ describe("AccessGrants", function () {
           it("Returns no grants", async function () {
             const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
 
-            await accessGrants.connect(owner).insert_grant(grantee, "some ID");
+            await accessGrants.connect(owner).insert_grant(grantee, "some ID", 0);
 
             let grants = await accessGrants.grants_by(owner, grantee, "bad ID");
 
@@ -122,7 +150,7 @@ describe("AccessGrants", function () {
           it("Returns the grant, regardless of caller", async function () {
             const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
 
-            await accessGrants.connect(owner).insert_grant(grantee, "some ID");
+            await accessGrants.connect(owner).insert_grant(grantee, "some ID", 0);
 
             let grants1 = await accessGrants.connect(owner).grants_by(owner, grantee, "some ID");
             let grants2 = await accessGrants.connect(grantee).grants_by(owner, grantee, "some ID");

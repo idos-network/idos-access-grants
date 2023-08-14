@@ -28,15 +28,14 @@ contract AccessGrants {
 
     function insert_grant(
       address grantee,
-      string memory dataId
-      // TODO uint256 lockedUntil
+      string memory dataId,
+      uint256 lockedUntil
     ) public {
         Grant memory grant = Grant({
             owner: msg.sender,
             grantee: grantee,
             dataId: dataId,
-            // TODO lockedUntil: lockedUntil
-            lockedUntil: 0
+            lockedUntil: lockedUntil
         });
 
         bytes32 grantId = deriveGrantId(grant);
@@ -58,6 +57,8 @@ contract AccessGrants {
         require(grants.length > 0, "No grants for sender");
 
         Grant memory grant = grants[0];
+
+        require(grant.lockedUntil < block.timestamp, "Grant is timelocked");
 
         bytes32 grantId = deriveGrantId(grant);
 
