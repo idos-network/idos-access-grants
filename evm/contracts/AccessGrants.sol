@@ -4,41 +4,62 @@ pragma solidity =0.8.19;
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 contract AccessGrants {
+    using EnumerableSet for EnumerableSet.Bytes32Set;
+
     struct Grant {
       address owner;
       address grantee;
       string dataId;
       uint256 lockedUntil;
     }
-    
+
     mapping(bytes32 => Grant) private grantsById;
-    using EnumerableSet for EnumerableSet.Bytes32Set;
     mapping(address => EnumerableSet.Bytes32Set) private grantIdsByOwner;
     mapping(address => EnumerableSet.Bytes32Set) private grantIdsByGrantee;
     mapping(string => EnumerableSet.Bytes32Set) private grantIdsByDataId;
 
+    bytes32 constant WILDCARD_DATA_ID = keccak256(abi.encodePacked("0"));
+
     constructor() {}
 
-    function insert_grant(address _grantee, string memory _dataId) public {
-        Grant memory newGrant = Grant({
+    /*
+     * public interface
+     */
+
+    function insert_grant(
+      address grantee,
+      string memory dataId
+      // TODO uint256 lockedUntil
+    ) public {
+        Grant memory grant = Grant({
             owner: msg.sender,
-            grantee: _grantee,
-            dataId: _dataId,
+            grantee: grantee,
+            dataId: dataId,
+            // TODO lockedUntil: lockedUntil
             lockedUntil: 0
         });
-        
-        bytes32 newGrantId = keccak256(abi.encodePacked(newGrant.owner, newGrant.grantee, newGrant.dataId, newGrant.lockedUntil));
 
-        grantsById[newGrantId] = newGrant;
-        grantIdsByOwner[newGrant.owner].add(newGrantId);
-        grantIdsByGrantee[newGrant.grantee].add(newGrantId);
-        grantIdsByDataId[newGrant.dataId].add(newGrantId);
+        bytes32 grantId = deriveGrantId(grant);
+
+        require(grantsById[grantId].owner == address(0), "Grant already exists");
+
+        grantsById[grantId] = grant;
+        grantIdsByOwner[grant.owner].add(grantId);
+        grantIdsByGrantee[grant.grantee].add(grantId);
+        grantIdsByDataId[grant.dataId].add(grantId);
     }
 
-    function delete_grant(address _grantee, string memory _dataId) public returns (Grant memory) {
-        Grant memory grant = grants_by(msg.sender, _grantee, _dataId)[0];
+    function delete_grant(
+      address grantee,
+      string memory dataId
+    ) public returns (Grant memory) {
+        Grant[] memory grants = grants_by(msg.sender, grantee, dataId);
 
-        bytes32 grantId = keccak256(abi.encodePacked(grant.owner, grant.grantee, grant.dataId, grant.lockedUntil));
+        require(grants.length > 0, "No grants for sender");
+
+        Grant memory grant = grants[0];
+
+        bytes32 grantId = deriveGrantId(grant);
 
         delete grantsById[grantId];
         grantIdsByOwner[grant.owner].remove(grantId);
@@ -48,53 +69,84 @@ contract AccessGrants {
         return grant;
     }
 
-    function grants_for(address _grantee, string memory _dataId) public view returns (Grant[] memory) {
-        return grants_by(address(0), _grantee, _dataId);
+    function grants_for(
+      address grantee,
+      string memory dataId
+    ) public view returns (Grant[] memory) {
+        return grants_by(address(0), grantee, dataId);
     }
 
-    function grants_by(address owner, address grantee, string memory dataId) public view returns (Grant[] memory) {
+    function grants_by(
+      address owner,
+      address grantee,
+      string memory dataId
+    ) public view returns (Grant[] memory) {
         bytes32[] memory candidateGrantIds;
-        uint256 countCandidateGrants;
+        uint256 candidateGrantCount;
 
         if (owner != address(0)) {
           candidateGrantIds = grantIdsByOwner[owner].values();
-          countCandidateGrants = grantIdsByOwner[owner].length();
-        } else {
+          candidateGrantCount = grantIdsByOwner[owner].length();
+        } else if (grantee != address(0)) {
           candidateGrantIds = grantIdsByGrantee[grantee].values();
-          countCandidateGrants = grantIdsByGrantee[grantee].length();
+          candidateGrantCount = grantIdsByGrantee[grantee].length();
+        } else {
+          revert("Neither owner nor grantee provided");
         }
 
         uint256 returnCount = 0;
-        bool[] memory keepList = new bool[](countCandidateGrants);
+        bool[] memory keepList = new bool[](candidateGrantCount);
 
-        for (uint i = 0; i < countCandidateGrants; i++) {
-            bytes32 grantId = candidateGrantIds[i];
-            bool keep = true;
+        for (uint256 i = 0; i < candidateGrantCount; i++) {
+            bytes32 candidateGrantId = candidateGrantIds[i];
+            bool returnCandidate = false;
 
-            if (grantee != address(0)) {
-                keep = grantIdsByGrantee[grantee].contains(grantId);
-            }
+            returnCandidate =
+              grantee == address(0)
+              || grantIdsByGrantee[grantee].contains(candidateGrantId);
 
-            if (keep && keccak256(abi.encodePacked((dataId))) != keccak256(abi.encodePacked(("0")))) {
-                keep = grantIdsByDataId[dataId].contains(grantId);
-            }
+            returnCandidate = returnCandidate && (
+              isWildcardDataId(dataId)
+              || grantIdsByDataId[dataId].contains(candidateGrantId)
+            );
 
-            if (keep) {
+            if (returnCandidate) {
                 returnCount++;
-                keepList[i] = keep;
+                keepList[i] = true;
             }
         }
 
-        Grant[] memory _grants = new Grant[](returnCount);
-
+        Grant[] memory grants = new Grant[](returnCount);
         uint256 returnIndex = 0;
-        for (uint256 i = 0; i < countCandidateGrants; i++) {
+
+        for (uint256 i = 0; i < candidateGrantCount; i++) {
             if (keepList[i]) {
-                _grants[returnIndex] = grantsById[candidateGrantIds[i]];
+                grants[returnIndex] = grantsById[candidateGrantIds[i]];
                 returnIndex++;
             }
         }
 
-        return _grants;
+        return grants;
+    }
+
+    /*
+     * private helpers
+     */
+
+    function deriveGrantId(
+      Grant memory grant
+    ) private pure returns (bytes32) {
+        return keccak256(abi.encodePacked(
+          grant.owner,
+          grant.grantee,
+          grant.dataId,
+          grant.lockedUntil
+        ));
+    }
+
+    function isWildcardDataId(
+        string memory dataId
+    ) private pure returns (bool) {
+      return keccak256(abi.encodePacked((dataId))) == WILDCARD_DATA_ID;
     }
 }
