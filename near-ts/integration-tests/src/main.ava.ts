@@ -73,4 +73,18 @@ test("everything", async (t) => {
     { owner: "test.near", grantee: "bob.near", dataId: "90" },
     { owner: "test.near", grantee: "charlie.near", dataId: "99" },
   ]);
+
+  await root.call(contract, "delete_grant", {
+    grantee: "bob.near",
+    dataId: "90",
+  });
+
+  grants_by = await contract.view("grants_by", {
+    owner: "test.near",
+  });
+
+  t.deepEqual(grants_by, [
+    { owner: "test.near", grantee: "bob.near", dataId: "42" },
+    { owner: "test.near", grantee: "charlie.near", dataId: "99" },
+  ]);
 });

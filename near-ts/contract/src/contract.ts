@@ -72,6 +72,38 @@ class AccessGrants {
     );
   }
 
+  @call({})
+  delete_grant({
+    grantee,
+    dataId
+  }: {
+    grantee: AccountId,
+    dataId: string
+  }): Grant {
+    const owner = near.signerAccountId();
+
+    const grant = this.grants_by({ owner, grantee, dataId })[0];
+
+    const grantId = this.deriveGrantId({ grant });
+
+    this.grantsById.remove(grantId);
+
+    this.grantIdsByOwner.set(
+      owner,
+      (this.grantIdsByOwner.get(owner) || []).filter((id) => (id !== grantId)),
+    );
+    this.grantIdsByGrantee.set(
+      grantee,
+      (this.grantIdsByGrantee.get(grantee) || []).filter((id) => (id !== grantId)),
+    );
+    this.grantIdsByDataId.set(
+      dataId,
+      (this.grantIdsByDataId.get(grantee) || []).filter((id) => (id !== grantId)),
+    );
+
+    return grant;
+  }
+
   @view({})
   grants_for({
     grantee,
