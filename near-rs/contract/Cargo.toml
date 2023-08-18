@@ -8,6 +8,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
+hex = "0.4.3"
 near-sdk = "4.0.0"
 uint = { version = "0.9.3", default-features = false }
 

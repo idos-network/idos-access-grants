@@ -3,6 +3,7 @@ use near_units::parse_near;
 use serde::Deserialize;
 use serde_json::json;
 use workspaces::{Account, Contract};
+use workspaces::result::ExecutionFinalResult;
 
 #[derive(Deserialize)]
 pub struct Grant {
@@ -29,39 +30,115 @@ async fn main() -> anyhow::Result<()> {
         .into_result()?;
 
     // begin tests
-    test_grants_for(&alice, &contract).await?;
+    test_everything(&alice, &contract).await?;
+
     Ok(())
 }
 
-async fn test_grants_for(
+async fn test_everything(
     user: &Account,
     contract: &Contract,
 ) -> anyhow::Result<()> {
-    let mut execution_result;
+    let owner = user.id().as_str();
 
-    execution_result = user
-        .call( contract.id(), "grants_for")
-        .args_json(json!({"grantee": "julio.near", "data_id": "42"}))
-        .transact()
-        .await?;
+    let contract_call = |method, args|
+        user.call(contract.id(), method).args_json(args).transact();
 
-    assert!(execution_result.is_success());
+    let parse_grants = |result: ExecutionFinalResult|
+        result.json::<Vec<Grant>>().unwrap();
 
-    let grants = execution_result.json::<Vec<Grant>>()?;
+    let mut result;
 
-    assert_eq!(grants.len(), 1);
+    result = contract_call("grants_by", json!({
+        "grantee": "bob.near",
+        "data_id": "A1",
+    })).await?;
+    assert!(result.is_success());
+    assert_eq!(parse_grants(result).len(), 0);
 
-    assert_eq!(grants[0].grantee, "julio.near");
-    assert_eq!(grants[0].data_id, "42");
+    result = contract_call("insert_grant", json!({
+        "grantee": "bob.near",
+        "data_id": "A1",
+    })).await?;
+    assert!(result.is_success());
 
-    execution_result = user
-        .call( contract.id(), "grants_for")
-        .args_json(json!({"grantee": "julio.near"}))
-        .transact()
-        .await?;
+    result = contract_call("insert_grant", json!({
+        "grantee": "bob.near",
+        "data_id": "A2",
+    })).await?;
+    assert!(result.is_success());
 
-    assert!(execution_result.is_failure());
+    result = contract_call("insert_grant", json!({
+        "grantee": "charlie.near",
+        "data_id": "A2",
+    })).await?;
+    assert!(result.is_success());
 
-    println!("      Passed ✅ test grants_for");
+    result = contract_call("grants_by", json!({
+        "owner": owner,
+    })).await?;
+    assert!(result.is_success());
+    assert_eq!(parse_grants(result).len(), 3);
+
+    result = contract_call("grants_by", json!({
+        "grantee": "bob.near",
+    })).await?;
+    assert!(result.is_success());
+    assert_eq!(parse_grants(result).len(), 2);
+
+    result = contract_call("grants_by", json!({
+        "owner": owner,
+        "grantee": "bob.near",
+    })).await?;
+    assert!(result.is_success());
+    assert_eq!(parse_grants(result).len(), 2);
+
+    result = contract_call("grants_by", json!({
+        "owner": owner,
+        "data_id": "A2",
+    })).await?;
+    assert!(result.is_success());
+    assert_eq!(parse_grants(result).len(), 2);
+
+    result = contract_call("grants_by", json!({
+        "grantee": "bob.near",
+        "data_id": "A1",
+    })).await?;
+    assert!(result.is_success());
+    assert_eq!(parse_grants(result).len(), 1);
+
+    result = contract_call("grants_by", json!({
+        "grantee": "charlie.near",
+        "data_id": "A1"
+    })).await?;
+    assert!(result.is_success());
+    assert_eq!(parse_grants(result).len(), 0);
+
+    result = contract_call("delete_grant", json!({
+        "grantee": "bob.near",
+        "data_id": "A1",
+    })).await?;
+    assert!(result.is_success());
+
+    result = contract_call("grants_by", json!({
+        "grantee": "bob.near",
+    })).await?;
+    assert!(result.is_success());
+    assert_eq!(parse_grants(result).len(), 1);
+
+    result = contract_call("grants_by", json!({
+        "grantee": "bob.near",
+        "data_id": "A1",
+    })).await?;
+    assert!(result.is_success());
+    assert_eq!(parse_grants(result).len(), 0);
+
+    result = contract_call("grants_by", json!({
+        "owner": owner,
+    })).await?;
+    assert!(result.is_success());
+    assert_eq!(parse_grants(result).len(), 2);
+
+    println!("      Passed ✅ test_everything");
     Ok(())
 }
