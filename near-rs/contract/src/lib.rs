@@ -55,7 +55,8 @@ impl FractalRegistry {
     pub fn insert_grant(
         &mut self,
         grantee: AccountId,
-        data_id: String
+        data_id: String,
+        mut locked_until: Option<u64>
     ) {
         let owner = env::predecessor_account_id();
 
@@ -63,10 +64,14 @@ impl FractalRegistry {
             owner: owner.clone(),
             grantee: grantee.clone(),
             data_id: data_id.clone(),
-            locked_until: 0,
+            locked_until: locked_until.unwrap_or(0),
         };
 
         let grant_id = derive_grant_id(&new_grant);
+
+        if self.grants_by_id.contains_key(&grant_id) {
+            near_sdk::env::panic_str("Grant already exists");
+        }
 
         self.grants_by_id.insert(&grant_id, &new_grant);
 
@@ -99,7 +104,12 @@ impl FractalRegistry {
         let grant = self
             .grants_by(None, Some(grantee.clone()), Some(data_id.clone()))[0]
             .clone();
+
         let grant_id = derive_grant_id(&grant);
+
+        if self.grants_by_id.get(&grant_id).unwrap().locked_until > env::block_timestamp() {
+            near_sdk::env::panic_str("Grant is timelocked");
+        }
 
         self.grants_by_id.remove(&grant_id);
 

@@ -1,4 +1,5 @@
 use std::{env, fs};
+use std::time::{SystemTime, UNIX_EPOCH, Duration};
 use near_units::parse_near;
 use serde::Deserialize;
 use serde_json::json;
@@ -61,6 +62,13 @@ async fn test_everything(
         "data_id": "A1",
     })).await?;
     assert!(result.is_success());
+
+    result = contract_call("insert_grant", json!({
+        "grantee": "bob.near",
+        "data_id": "A1",
+    })).await?;
+    assert!(result.is_failure());
+    // TODO assert that error is "Grant already exists"
 
     result = contract_call("insert_grant", json!({
         "grantee": "bob.near",
@@ -138,6 +146,22 @@ async fn test_everything(
     })).await?;
     assert!(result.is_success());
     assert_eq!(parse_grants(result).len(), 2);
+
+    let in_one_minute = SystemTime::now().duration_since(UNIX_EPOCH)? + Duration::from_secs(60);
+
+    result = contract_call("insert_grant", json!({
+        "grantee": "dave.near",
+        "data_id": "A2",
+        "locked_until": in_one_minute.as_nanos(),
+    })).await?;
+    assert!(result.is_success());
+
+    result = contract_call("delete_grant", json!({
+        "grantee": "dave.near",
+        "data_id": "A2",
+    })).await?;
+    assert!(result.is_failure());
+    // TODO assert that error is "Grant is timelocked"
 
     println!("      Passed ✅ test_everything");
     Ok(())
