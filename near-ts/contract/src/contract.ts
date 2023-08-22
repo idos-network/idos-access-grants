@@ -8,13 +8,14 @@ import {
   AccountId,
   encode,
   decode,
+  assert,
 } from "near-sdk-js";
 
 class Grant {
   owner: AccountId;
   grantee: AccountId;
   dataId: string;
-  lockedUntil: number;
+  lockedUntil: bigint;
 
   constructor({ owner, grantee, dataId, lockedUntil }: Grant) {
     this.owner = owner;
@@ -48,13 +49,16 @@ class AccessGrants {
   }: {
     grantee: AccountId,
     dataId: string,
-    lockedUntil: number
+    lockedUntil: bigint
   }): void {
     const owner = near.signerAccountId();
+    lockedUntil = lockedUntil || 0n;
 
     const grant = new Grant({ owner, grantee, dataId, lockedUntil });
 
     const grantId = this.deriveGrantId({ grant });
+
+    assert(this.grantsById.get(grantId) === null, "Grant already exists");
 
     this.grantsById.set(grantId, grant);
 
@@ -83,6 +87,8 @@ class AccessGrants {
     const owner = near.signerAccountId();
 
     const grant = this.grants_by({ owner, grantee, dataId })[0];
+
+    assert(near.blockTimestamp() > grant.lockedUntil, "Grant is timelocked");
 
     const grantId = this.deriveGrantId({ grant });
 

@@ -1,4 +1,4 @@
-import { Worker, NearAccount } from "near-workspaces";
+import { Worker, NearAccount, TransactionResult } from "near-workspaces";
 import anyTest, { TestFn } from "ava";
 
 const test = anyTest as TestFn<{
@@ -32,15 +32,26 @@ test.afterEach.always(async (t) => {
 
 test("everything", async (t) => {
   const { root, contract } = t.context.accounts;
+  let transactionResult: TransactionResult;
 
   await root.call(contract, "insert_grant", {
     grantee: "bob.near",
     dataId: "42",
   });
+
+  transactionResult = await root.callRaw(contract, "insert_grant", {
+    grantee: "bob.near",
+    dataId: "42",
+  });
+
+  t.assert(transactionResult.failed);
+  t.assert(transactionResult.receiptFailureMessagesContain("Grant already exists"));
+
   await root.call(contract, "insert_grant", {
     grantee: "bob.near",
     dataId: "90",
   });
+
   await root.call(contract, "insert_grant", {
     grantee: "charlie.near",
     dataId: "99",
@@ -52,7 +63,7 @@ test("everything", async (t) => {
   });
 
   t.deepEqual(grants_for, [
-    { owner: "test.near", grantee: "bob.near", dataId: "90" },
+    { owner: "test.near", grantee: "bob.near", dataId: "90", lockedUntil: "0" },
   ]);
 
   let grants_by:Array<Object>;
@@ -69,9 +80,9 @@ test("everything", async (t) => {
   });
 
   t.deepEqual(grants_by, [
-    { owner: "test.near", grantee: "bob.near", dataId: "42" },
-    { owner: "test.near", grantee: "bob.near", dataId: "90" },
-    { owner: "test.near", grantee: "charlie.near", dataId: "99" },
+    { owner: "test.near", grantee: "bob.near", dataId: "42", lockedUntil: "0" },
+    { owner: "test.near", grantee: "bob.near", dataId: "90", lockedUntil: "0" },
+    { owner: "test.near", grantee: "charlie.near", dataId: "99", lockedUntil: "0" },
   ]);
 
   await root.call(contract, "delete_grant", {
@@ -84,7 +95,21 @@ test("everything", async (t) => {
   });
 
   t.deepEqual(grants_by, [
-    { owner: "test.near", grantee: "bob.near", dataId: "42" },
-    { owner: "test.near", grantee: "charlie.near", dataId: "99" },
+    { owner: "test.near", grantee: "bob.near", dataId: "42", lockedUntil: "0" },
+    { owner: "test.near", grantee: "charlie.near", dataId: "99", lockedUntil: "0" },
   ]);
+
+  await root.call(contract, "insert_grant", {
+    grantee: "dave.near",
+    dataId: "99",
+    lockedUntil: (Date.now() + 24*60*60*1000) * 1e6
+  });
+
+  transactionResult = await root.callRaw(contract, "delete_grant", {
+    grantee: "dave.near",
+    dataId: "99",
+  });
+
+  t.assert(transactionResult.failed);
+  t.assert(transactionResult.receiptFailureMessagesContain("Grant is timelocked"));
 });
