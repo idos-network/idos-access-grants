@@ -79,35 +79,40 @@ class AccessGrants {
   @call({})
   delete_grant({
     grantee,
-    dataId
+    dataId,
+    lockedUntil
   }: {
     grantee: AccountId,
-    dataId: string
-  }): Grant {
+    dataId: string,
+    lockedUntil: bigint
+  }): void {
     const owner = near.signerAccountId();
+    lockedUntil = lockedUntil || 0n;
 
-    const grant = this.grants_by({ owner, grantee, dataId })[0];
+    const grants = this.grants_by({ owner, grantee, dataId });
 
-    assert(near.blockTimestamp() > grant.lockedUntil, "Grant is timelocked");
+    grants.forEach((grant) => {
+      if (lockedUntil == 0n || grant.lockedUntil == lockedUntil) {
+        assert(near.blockTimestamp() > grant.lockedUntil, "Grant is timelocked");
 
-    const grantId = this.deriveGrantId({ grant });
+        const grantId = this.deriveGrantId({ grant });
 
-    this.grantsById.remove(grantId);
+        this.grantsById.remove(grantId);
 
-    this.grantIdsByOwner.set(
-      owner,
-      (this.grantIdsByOwner.get(owner) || []).filter((id) => (id !== grantId)),
-    );
-    this.grantIdsByGrantee.set(
-      grantee,
-      (this.grantIdsByGrantee.get(grantee) || []).filter((id) => (id !== grantId)),
-    );
-    this.grantIdsByDataId.set(
-      dataId,
-      (this.grantIdsByDataId.get(grantee) || []).filter((id) => (id !== grantId)),
-    );
-
-    return grant;
+        this.grantIdsByOwner.set(
+          owner,
+          (this.grantIdsByOwner.get(owner) || []).filter((id) => (id !== grantId)),
+        );
+        this.grantIdsByGrantee.set(
+          grantee,
+          (this.grantIdsByGrantee.get(grantee) || []).filter((id) => (id !== grantId)),
+        );
+        this.grantIdsByDataId.set(
+          dataId,
+          (this.grantIdsByDataId.get(grantee) || []).filter((id) => (id !== grantId)),
+        );
+      }
+    });
   }
 
   @view({})

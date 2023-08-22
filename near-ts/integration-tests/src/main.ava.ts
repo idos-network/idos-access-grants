@@ -99,16 +99,104 @@ test("everything", async (t) => {
     { owner: "test.near", grantee: "charlie.near", dataId: "99", lockedUntil: "0" },
   ]);
 
+  /*
+   * Timelock expired
+   */
+
+  let lockedUntil = (Date.now() - 24*60*60*1000) * 1e6;
+
   await root.call(contract, "insert_grant", {
     grantee: "dave.near",
     dataId: "99",
-    lockedUntil: (Date.now() + 24*60*60*1000) * 1e6
+    lockedUntil: lockedUntil,
+  });
+
+  transactionResult = await root.callRaw(contract, "delete_grant", {
+    grantee: "dave.near",
+    dataId: "99",
+    lockedUntil: lockedUntil,
+  });
+
+  t.assert(transactionResult.succeeded);
+
+  grants_by = await contract.view("grants_by", {
+    grantee: "dave.near",
+  });
+
+  t.assert(grants_by.length == 0);
+
+  await root.call(contract, "insert_grant", {
+    grantee: "dave.near",
+    dataId: "99",
+    lockedUntil: lockedUntil,
   });
 
   transactionResult = await root.callRaw(contract, "delete_grant", {
     grantee: "dave.near",
     dataId: "99",
   });
+
+  t.assert(transactionResult.succeeded);
+
+  grants_by = await contract.view("grants_by", {
+    grantee: "dave.near",
+  });
+
+  t.assert(grants_by.length == 0);
+
+  transactionResult = await root.callRaw(contract, "delete_grant", {
+    grantee: "dave.near",
+    dataId: "99",
+    lockedUntil: 0,
+  });
+
+  t.assert(transactionResult.succeeded);
+
+  grants_by = await contract.view("grants_by", {
+    grantee: "dave.near",
+  });
+
+  t.assert(grants_by.length == 0);
+
+
+  /*
+   * Still timelocked
+   */
+
+  lockedUntil = (Date.now() + 24*60*60*1000) * 1e6;
+
+  await root.call(contract, "insert_grant", {
+    grantee: "dave.near",
+    dataId: "99",
+    lockedUntil: lockedUntil,
+  });
+
+  transactionResult = await root.callRaw(contract, "delete_grant", {
+    grantee: "dave.near",
+    dataId: "99",
+    lockeduntil: lockedUntil,
+  });
+
+  t.assert(transactionResult.failed);
+  t.assert(transactionResult.receiptFailureMessagesContain("Grant is timelocked"));
+
+  grants_by = await contract.view("grants_by", {
+    grantee: "dave.near",
+  });
+
+  t.assert(grants_by.length == 1);
+
+  transactionResult = await root.callRaw(contract, "delete_grant", {
+    grantee: "dave.near",
+    dataId: "99",
+    lockedUntil: 0,
+  });
+
+  grants_by = await contract.view("grants_by", {
+    grantee: "dave.near",
+  });
+
+  t.assert(grants_by.length == 1);
 
   t.assert(transactionResult.failed);
   t.assert(transactionResult.receiptFailureMessagesContain("Grant is timelocked"));

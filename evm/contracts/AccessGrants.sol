@@ -50,24 +50,27 @@ contract AccessGrants {
 
     function delete_grant(
       address grantee,
-      string memory dataId
-    ) public returns (Grant memory) {
+      string memory dataId,
+      uint256 lockedUntil
+    ) public {
         Grant[] memory grants = grants_by(msg.sender, grantee, dataId);
 
         require(grants.length > 0, "No grants for sender");
 
-        Grant memory grant = grants[0];
+        for (uint256 i = 0; i < grants.length; i++) {
+          Grant memory grant = grants[i];
 
-        require(grant.lockedUntil < block.timestamp, "Grant is timelocked");
+          if (lockedUntil == 0 || grants[i].lockedUntil == lockedUntil) {
+            require(grant.lockedUntil < block.timestamp, "Grant is timelocked");
 
-        bytes32 grantId = deriveGrantId(grant);
+            bytes32 grantId = deriveGrantId(grant);
 
-        delete grantsById[grantId];
-        grantIdsByOwner[grant.owner].remove(grantId);
-        grantIdsByGrantee[grant.grantee].remove(grantId);
-        grantIdsByDataId[grant.dataId].remove(grantId);
-
-        return grant;
+            delete grantsById[grantId];
+            grantIdsByOwner[grant.owner].remove(grantId);
+            grantIdsByGrantee[grant.grantee].remove(grantId);
+            grantIdsByDataId[grant.dataId].remove(grantId);
+          }
+        }
     }
 
     function grants_for(
