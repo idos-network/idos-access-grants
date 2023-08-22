@@ -68,7 +68,7 @@ async fn test_everything(
         "data_id": "A1",
     })).await?;
     assert!(result.is_failure());
-    // TODO assert that error is "Grant already exists"
+    assert!(result.into_result().unwrap_err().to_string().contains("Grant already exists"));
 
     result = contract_call("insert_grant", json!({
         "grantee": "bob.near",
@@ -161,7 +161,7 @@ async fn test_everything(
         "data_id": "A2",
     })).await?;
     assert!(result.is_failure());
-    // TODO assert that error is "Grant is timelocked"
+    assert!(result.into_result().unwrap_err().to_string().contains("Grant is timelocked"));
 
     println!("      Passed ✅ test_everything");
     Ok(())
