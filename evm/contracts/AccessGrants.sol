@@ -13,24 +13,21 @@ contract AccessGrants {
       uint256 lockedUntil;
     }
 
-    mapping(bytes32 => Grant) private grantsById;
-    mapping(address => EnumerableSet.Bytes32Set) private grantIdsByOwner;
-    mapping(address => EnumerableSet.Bytes32Set) private grantIdsByGrantee;
-    mapping(string => EnumerableSet.Bytes32Set) private grantIdsByDataId;
+    mapping(bytes32 => Grant) private _grantsById;
 
-    bytes32 constant WILDCARD_DATA_ID = keccak256(abi.encodePacked("0"));
+    mapping(address => EnumerableSet.Bytes32Set) private _grantIdsByOwner;
+    mapping(address => EnumerableSet.Bytes32Set) private _grantIdsByGrantee;
+    mapping(string => EnumerableSet.Bytes32Set) private _grantIdsByDataId;
+
+    bytes32 private constant _WILDCARD_DATA_ID = keccak256(abi.encodePacked("0"));
 
     constructor() {}
 
-    /*
-     * public interface
-     */
-
-    function insert_grant(
+    function insertGrant(
       address grantee,
       string memory dataId,
       uint256 lockedUntil
-    ) public {
+    ) external {
         Grant memory grant = Grant({
             owner: msg.sender,
             grantee: grantee,
@@ -38,22 +35,22 @@ contract AccessGrants {
             lockedUntil: lockedUntil
         });
 
-        bytes32 grantId = deriveGrantId(grant);
+        bytes32 grantId = _deriveGrantId(grant);
 
-        require(grantsById[grantId].owner == address(0), "Grant already exists");
+        require(_grantsById[grantId].owner == address(0), "Grant already exists");
 
-        grantsById[grantId] = grant;
-        grantIdsByOwner[grant.owner].add(grantId);
-        grantIdsByGrantee[grant.grantee].add(grantId);
-        grantIdsByDataId[grant.dataId].add(grantId);
+        _grantsById[grantId] = grant;
+        _grantIdsByOwner[grant.owner].add(grantId);
+        _grantIdsByGrantee[grant.grantee].add(grantId);
+        _grantIdsByDataId[grant.dataId].add(grantId);
     }
 
-    function delete_grant(
+    function deleteGrant(
       address grantee,
       string memory dataId,
       uint256 lockedUntil
-    ) public {
-        Grant[] memory grants = grants_by(msg.sender, grantee, dataId);
+    ) external {
+        Grant[] memory grants = grantsBy(msg.sender, grantee, dataId);
 
         require(grants.length > 0, "No grants for sender");
 
@@ -63,24 +60,24 @@ contract AccessGrants {
           if (lockedUntil == 0 || grants[i].lockedUntil == lockedUntil) {
             require(grant.lockedUntil < block.timestamp, "Grant is timelocked");
 
-            bytes32 grantId = deriveGrantId(grant);
+            bytes32 grantId = _deriveGrantId(grant);
 
-            delete grantsById[grantId];
-            grantIdsByOwner[grant.owner].remove(grantId);
-            grantIdsByGrantee[grant.grantee].remove(grantId);
-            grantIdsByDataId[grant.dataId].remove(grantId);
+            delete _grantsById[grantId];
+            _grantIdsByOwner[grant.owner].remove(grantId);
+            _grantIdsByGrantee[grant.grantee].remove(grantId);
+            _grantIdsByDataId[grant.dataId].remove(grantId);
           }
         }
     }
 
-    function grants_for(
+    function grantsFor(
       address grantee,
       string memory dataId
-    ) public view returns (Grant[] memory) {
-        return grants_by(address(0), grantee, dataId);
+    ) external view returns (Grant[] memory) {
+        return grantsBy(address(0), grantee, dataId);
     }
 
-    function grants_by(
+    function grantsBy(
       address owner,
       address grantee,
       string memory dataId
@@ -89,11 +86,11 @@ contract AccessGrants {
         uint256 candidateGrantCount;
 
         if (owner != address(0)) {
-          candidateGrantIds = grantIdsByOwner[owner].values();
-          candidateGrantCount = grantIdsByOwner[owner].length();
+          candidateGrantIds = _grantIdsByOwner[owner].values();
+          candidateGrantCount = _grantIdsByOwner[owner].length();
         } else if (grantee != address(0)) {
-          candidateGrantIds = grantIdsByGrantee[grantee].values();
-          candidateGrantCount = grantIdsByGrantee[grantee].length();
+          candidateGrantIds = _grantIdsByGrantee[grantee].values();
+          candidateGrantCount = _grantIdsByGrantee[grantee].length();
         } else {
           revert("Neither owner nor grantee provided");
         }
@@ -107,11 +104,11 @@ contract AccessGrants {
 
             returnCandidate =
               grantee == address(0)
-              || grantIdsByGrantee[grantee].contains(candidateGrantId);
+              || _grantIdsByGrantee[grantee].contains(candidateGrantId);
 
             returnCandidate = returnCandidate && (
-              isWildcardDataId(dataId)
-              || grantIdsByDataId[dataId].contains(candidateGrantId)
+              _isWildcardDataId(dataId)
+              || _grantIdsByDataId[dataId].contains(candidateGrantId)
             );
 
             if (returnCandidate) {
@@ -125,7 +122,7 @@ contract AccessGrants {
 
         for (uint256 i = 0; i < candidateGrantCount; i++) {
             if (keepList[i]) {
-                grants[returnIndex] = grantsById[candidateGrantIds[i]];
+                grants[returnIndex] = _grantsById[candidateGrantIds[i]];
                 returnIndex++;
             }
         }
@@ -133,11 +130,7 @@ contract AccessGrants {
         return grants;
     }
 
-    /*
-     * private helpers
-     */
-
-    function deriveGrantId(
+    function _deriveGrantId(
       Grant memory grant
     ) private pure returns (bytes32) {
         return keccak256(abi.encodePacked(
@@ -148,9 +141,9 @@ contract AccessGrants {
         ));
     }
 
-    function isWildcardDataId(
+    function _isWildcardDataId(
         string memory dataId
     ) private pure returns (bool) {
-      return keccak256(abi.encodePacked((dataId))) == WILDCARD_DATA_ID;
+      return keccak256(abi.encodePacked((dataId))) == _WILDCARD_DATA_ID;
     }
 }

@@ -12,12 +12,12 @@ describe("AccessGrants", function () {
     const AccessGrants = await ethers.getContractFactory("AccessGrants");
     const accessGrants = await AccessGrants.deploy();
 
-    await accessGrants.connect(signer1).insert_grant(signer2, "1A", NO_TIMELOCK);
-    await accessGrants.connect(signer1).insert_grant(signer2, "1B", NO_TIMELOCK);
-    await accessGrants.connect(signer1).insert_grant(signer3, "1A", NO_TIMELOCK);
+    await accessGrants.connect(signer1).insertGrant(signer2, "1A", NO_TIMELOCK);
+    await accessGrants.connect(signer1).insertGrant(signer2, "1B", NO_TIMELOCK);
+    await accessGrants.connect(signer1).insertGrant(signer3, "1A", NO_TIMELOCK);
 
-    await accessGrants.connect(signer2).insert_grant(signer1, "2A", NO_TIMELOCK);
-    await accessGrants.connect(signer2).insert_grant(signer3, "2A", NO_TIMELOCK);
+    await accessGrants.connect(signer2).insertGrant(signer1, "2A", NO_TIMELOCK);
+    await accessGrants.connect(signer2).insertGrant(signer3, "2A", NO_TIMELOCK);
 
     return { accessGrants, signer1, signer2, signer3, signer4 };
   }
@@ -27,7 +27,7 @@ describe("AccessGrants", function () {
       it("A grant can only be owned by its creator", async function () {
         const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
 
-        let grants = await accessGrants.grants_by(owner, grantee, "1A");
+        let grants = await accessGrants.grantsBy(owner, grantee, "1A");
 
         expect(grants.length).to.equal(1);
         expect(grants[0].owner).to.equal(owner.address);
@@ -37,7 +37,7 @@ describe("AccessGrants", function () {
         const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
 
         await expect(
-          accessGrants.connect(owner).insert_grant(grantee, "1A", NO_TIMELOCK)
+          accessGrants.connect(owner).insertGrant(grantee, "1A", NO_TIMELOCK)
         ).to.be.revertedWith("Grant already exists");
       });
     });
@@ -48,10 +48,10 @@ describe("AccessGrants", function () {
 
         const lockedUntil = await time.latest() - 1000;
 
-        await accessGrants.connect(owner).insert_grant(grantee, "some ID", lockedUntil);
+        await accessGrants.connect(owner).insertGrant(grantee, "some ID", lockedUntil);
 
         await expect(
-          accessGrants.connect(owner).delete_grant(grantee, "some ID", lockedUntil)
+          accessGrants.connect(owner).deleteGrant(grantee, "some ID", lockedUntil)
         ).to.not.be.revertedWith("Grant is timelocked");
       });
 
@@ -60,13 +60,13 @@ describe("AccessGrants", function () {
 
         const lockedUntil = await time.latest() - 1000;
 
-        await accessGrants.connect(owner).insert_grant(grantee, "some ID", lockedUntil);
+        await accessGrants.connect(owner).insertGrant(grantee, "some ID", lockedUntil);
 
         await expect(
-          accessGrants.connect(grantee).delete_grant(grantee, "some ID", lockedUntil)
+          accessGrants.connect(grantee).deleteGrant(grantee, "some ID", lockedUntil)
         ).to.be.revertedWith("No grants for sender");
 
-        let grants = await accessGrants.grants_by(owner, grantee, "some ID");
+        let grants = await accessGrants.grantsBy(owner, grantee, "some ID");
 
         expect(grants.length).to.equal(1);
       });
@@ -78,12 +78,12 @@ describe("AccessGrants", function () {
 
             const lockedUntil = await time.latest() + 1000;
 
-            await accessGrants.connect(owner).insert_grant(grantee, "some ID", lockedUntil);
+            await accessGrants.connect(owner).insertGrant(grantee, "some ID", lockedUntil);
             await expect(
-              accessGrants.connect(owner).delete_grant(grantee, "some ID", lockedUntil)
+              accessGrants.connect(owner).deleteGrant(grantee, "some ID", lockedUntil)
             ).to.be.revertedWith("Grant is timelocked");
 
-            let grants = await accessGrants.grants_by(owner, grantee, "some ID");
+            let grants = await accessGrants.grantsBy(owner, grantee, "some ID");
 
             expect(grants.length).to.equal(1);
           });
@@ -93,12 +93,12 @@ describe("AccessGrants", function () {
 
             const lockedUntil = await time.latest() - 1000;
 
-            await accessGrants.connect(owner).insert_grant(grantee, "some ID", lockedUntil);
+            await accessGrants.connect(owner).insertGrant(grantee, "some ID", lockedUntil);
             await expect(
-              accessGrants.connect(owner).delete_grant(grantee, "some ID", lockedUntil)
+              accessGrants.connect(owner).deleteGrant(grantee, "some ID", lockedUntil)
             ).to.not.be.revertedWith("Grant is timelocked");
 
-            let grants = await accessGrants.grants_by(owner, grantee, "some ID");
+            let grants = await accessGrants.grantsBy(owner, grantee, "some ID");
 
             expect(grants.length).to.equal(0);
           });
@@ -108,12 +108,12 @@ describe("AccessGrants", function () {
 
             const lockedUntil = await time.latest() - 1000;
 
-            await accessGrants.connect(owner).insert_grant(grantee, "some ID", lockedUntil);
+            await accessGrants.connect(owner).insertGrant(grantee, "some ID", lockedUntil);
             await expect(
-              accessGrants.connect(owner).delete_grant(grantee, "some ID", lockedUntil)
+              accessGrants.connect(owner).deleteGrant(grantee, "some ID", lockedUntil)
             ).to.not.be.revertedWith("Grant is timelocked");
 
-            let grants = await accessGrants.grants_by(owner, grantee, "some ID");
+            let grants = await accessGrants.grantsBy(owner, grantee, "some ID");
 
             expect(grants.length).to.equal(0);
           });
@@ -125,15 +125,15 @@ describe("AccessGrants", function () {
 
             const lockedUntil = await time.latest() - 1000;
 
-            await accessGrants.connect(owner).insert_grant(grantee, "some ID", lockedUntil + 0);
-            await accessGrants.connect(owner).insert_grant(grantee, "some ID", lockedUntil + 1);
-            await accessGrants.connect(owner).insert_grant(grantee, "some ID", lockedUntil + 2);
+            await accessGrants.connect(owner).insertGrant(grantee, "some ID", lockedUntil + 0);
+            await accessGrants.connect(owner).insertGrant(grantee, "some ID", lockedUntil + 1);
+            await accessGrants.connect(owner).insertGrant(grantee, "some ID", lockedUntil + 2);
 
             await expect(
-              accessGrants.connect(owner).delete_grant(grantee, "some ID", NO_TIMELOCK)
+              accessGrants.connect(owner).deleteGrant(grantee, "some ID", NO_TIMELOCK)
             ).to.not.be.revertedWith("Grant is timelocked");
 
-            let grants = await accessGrants.grants_by(owner, grantee, "some ID");
+            let grants = await accessGrants.grantsBy(owner, grantee, "some ID");
 
             expect(grants.length).to.equal(0);
           });
@@ -143,15 +143,15 @@ describe("AccessGrants", function () {
 
             const lockedUntil = await time.latest() - 1000;
 
-            await accessGrants.connect(owner).insert_grant(grantee, "some ID", lockedUntil + 0);
-            await accessGrants.connect(owner).insert_grant(grantee, "some ID", lockedUntil + 1);
-            await accessGrants.connect(owner).insert_grant(grantee, "some ID", lockedUntil + 2000);
+            await accessGrants.connect(owner).insertGrant(grantee, "some ID", lockedUntil + 0);
+            await accessGrants.connect(owner).insertGrant(grantee, "some ID", lockedUntil + 1);
+            await accessGrants.connect(owner).insertGrant(grantee, "some ID", lockedUntil + 2000);
 
             await expect(
-              accessGrants.connect(owner).delete_grant(grantee, "some ID", NO_TIMELOCK)
+              accessGrants.connect(owner).deleteGrant(grantee, "some ID", NO_TIMELOCK)
             ).to.be.revertedWith("Grant is timelocked");
 
-            let grants = await accessGrants.grants_by(owner, grantee, "some ID");
+            let grants = await accessGrants.grantsBy(owner, grantee, "some ID");
 
             expect(grants.length).to.equal(3);
           });
@@ -160,14 +160,14 @@ describe("AccessGrants", function () {
     });
 
     describe("Reading grants", function () {
-      describe("grants_for", async function () {
+      describe("grantsFor", async function () {
         describe("When the grant doesn't exist", async function () {
           it("Returns no grants", async function () {
             const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
 
-            await accessGrants.connect(owner).insert_grant(grantee, "some ID", NO_TIMELOCK);
+            await accessGrants.connect(owner).insertGrant(grantee, "some ID", NO_TIMELOCK);
 
-            let grants = await accessGrants.grants_for(grantee, "bad ID");
+            let grants = await accessGrants.grantsFor(grantee, "bad ID");
 
             expect(grants.length).to.equal(0);
             expect(grants).to.eql([]);
@@ -178,10 +178,10 @@ describe("AccessGrants", function () {
           it("Returns the grant, regardless of caller", async function () {
             const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
 
-            await accessGrants.connect(owner).insert_grant(grantee, "some ID", NO_TIMELOCK);
+            await accessGrants.connect(owner).insertGrant(grantee, "some ID", NO_TIMELOCK);
 
-            let grants1 = await accessGrants.connect(owner).grants_for(grantee, "some ID");
-            let grants2 = await accessGrants.connect(grantee).grants_for(grantee, "some ID");
+            let grants1 = await accessGrants.connect(owner).grantsFor(grantee, "some ID");
+            let grants2 = await accessGrants.connect(grantee).grantsFor(grantee, "some ID");
 
             expect(grants1.length).to.equal(1);
             expect(grants1).to.eql([
@@ -192,14 +192,14 @@ describe("AccessGrants", function () {
         });
       });
 
-      describe("grants_by", async function () {
+      describe("grantsBy", async function () {
         describe("When the grant doesn't exist", async function () {
           it("Returns no grants", async function () {
             const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
 
-            await accessGrants.connect(owner).insert_grant(grantee, "some ID", NO_TIMELOCK);
+            await accessGrants.connect(owner).insertGrant(grantee, "some ID", NO_TIMELOCK);
 
-            let grants = await accessGrants.grants_by(owner, grantee, "bad ID");
+            let grants = await accessGrants.grantsBy(owner, grantee, "bad ID");
 
             expect(grants.length).to.equal(0);
             expect(grants).to.eql([]);
@@ -210,10 +210,10 @@ describe("AccessGrants", function () {
           it("Returns the grant, regardless of caller", async function () {
             const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
 
-            await accessGrants.connect(owner).insert_grant(grantee, "some ID", NO_TIMELOCK);
+            await accessGrants.connect(owner).insertGrant(grantee, "some ID", NO_TIMELOCK);
 
-            let grants1 = await accessGrants.connect(owner).grants_by(owner, grantee, "some ID");
-            let grants2 = await accessGrants.connect(grantee).grants_by(owner, grantee, "some ID");
+            let grants1 = await accessGrants.connect(owner).grantsBy(owner, grantee, "some ID");
+            let grants2 = await accessGrants.connect(grantee).grantsBy(owner, grantee, "some ID");
 
             expect(grants1.length).to.equal(1);
             expect(grants1).to.eql([
@@ -227,7 +227,7 @@ describe("AccessGrants", function () {
               const { accessGrants } = await loadFixture(deployAndPopulateContractFixture);
 
               await expect(
-                accessGrants.grants_by(WILDCARD_ADDRESS, WILDCARD_ADDRESS, "some ID")
+                accessGrants.grantsBy(WILDCARD_ADDRESS, WILDCARD_ADDRESS, "some ID")
               ).to.be.revertedWith("Neither owner nor grantee provided");
             });
 
@@ -235,7 +235,7 @@ describe("AccessGrants", function () {
               it("Returns grants for any grantee, any data", async function () {
                 const { accessGrants, signer1, signer2, signer3 } = await loadFixture(deployAndPopulateContractFixture);
 
-                let grants = await accessGrants.grants_by(signer1, WILDCARD_ADDRESS, WILDCARD_DATA);
+                let grants = await accessGrants.grantsBy(signer1, WILDCARD_ADDRESS, WILDCARD_DATA);
 
                 expect(grants.length).to.equal(3);
                 expect(grants).to.eql([
@@ -244,7 +244,7 @@ describe("AccessGrants", function () {
                   [signer1.address, signer3.address, "1A", 0n],
                 ]);
 
-                grants = await accessGrants.grants_by(signer2, WILDCARD_ADDRESS, WILDCARD_DATA);
+                grants = await accessGrants.grantsBy(signer2, WILDCARD_ADDRESS, WILDCARD_DATA);
 
                 expect(grants.length).to.equal(2);
                 expect(grants).to.eql([
@@ -256,7 +256,7 @@ describe("AccessGrants", function () {
               it("Returns grants for given grantee, any data", async function () {
                 const { accessGrants, signer1, signer2, signer3 } = await loadFixture(deployAndPopulateContractFixture);
 
-                let grants = await accessGrants.grants_by(signer1, signer2, WILDCARD_DATA);
+                let grants = await accessGrants.grantsBy(signer1, signer2, WILDCARD_DATA);
 
                 expect(grants.length).to.equal(2);
                 expect(grants).to.eql([
@@ -264,7 +264,7 @@ describe("AccessGrants", function () {
                   [signer1.address, signer2.address, "1B", 0n],
                 ]);
 
-                grants = await accessGrants.grants_by(signer1, signer3, WILDCARD_DATA);
+                grants = await accessGrants.grantsBy(signer1, signer3, WILDCARD_DATA);
 
                 expect(grants.length).to.equal(1);
                 expect(grants).to.eql([
@@ -275,7 +275,7 @@ describe("AccessGrants", function () {
               it("Returns grants for any grantee, given data", async function () {
                 const { accessGrants, signer1, signer2, signer3 } = await loadFixture(deployAndPopulateContractFixture);
 
-                let grants = await accessGrants.grants_by(signer1, WILDCARD_ADDRESS, "1A");
+                let grants = await accessGrants.grantsBy(signer1, WILDCARD_ADDRESS, "1A");
 
                 expect(grants.length).to.equal(2);
                 expect(grants).to.eql([
@@ -283,7 +283,7 @@ describe("AccessGrants", function () {
                   [signer1.address, signer3.address, "1A", 0n],
                 ]);
 
-                grants = await accessGrants.grants_by(signer2, WILDCARD_ADDRESS, "2A");
+                grants = await accessGrants.grantsBy(signer2, WILDCARD_ADDRESS, "2A");
 
                 expect(grants.length).to.equal(2);
                 expect(grants).to.eql([
@@ -298,14 +298,14 @@ describe("AccessGrants", function () {
               it("Returns grants for any ownwer, any data", async function () {
                 const { accessGrants, signer1, signer2, signer3 } = await loadFixture(deployAndPopulateContractFixture);
 
-                let grants = await accessGrants.grants_by(WILDCARD_ADDRESS, signer1, WILDCARD_DATA);
+                let grants = await accessGrants.grantsBy(WILDCARD_ADDRESS, signer1, WILDCARD_DATA);
 
                 expect(grants.length).to.equal(1);
                 expect(grants).to.eql([
                   [signer2.address, signer1.address, "2A", 0n],
                 ]);
 
-                grants = await accessGrants.grants_by(WILDCARD_ADDRESS, signer3, WILDCARD_DATA);
+                grants = await accessGrants.grantsBy(WILDCARD_ADDRESS, signer3, WILDCARD_DATA);
 
                 expect(grants.length).to.equal(2);
                 expect(grants).to.eql([
@@ -317,14 +317,14 @@ describe("AccessGrants", function () {
               it("Returns grants for any ownwer, given data", async function () {
                 const { accessGrants, signer1, signer2, signer3 } = await loadFixture(deployAndPopulateContractFixture);
 
-                let grants = await accessGrants.grants_by(WILDCARD_ADDRESS, signer2, "1A");
+                let grants = await accessGrants.grantsBy(WILDCARD_ADDRESS, signer2, "1A");
 
                 expect(grants.length).to.equal(1);
                 expect(grants).to.eql([
                   [signer1.address, signer2.address, "1A", 0n],
                 ]);
 
-                grants = await accessGrants.grants_by(WILDCARD_ADDRESS, signer3, "2A");
+                grants = await accessGrants.grantsBy(WILDCARD_ADDRESS, signer3, "2A");
 
                 expect(grants.length).to.equal(1);
                 expect(grants).to.eql([
