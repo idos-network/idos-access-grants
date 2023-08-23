@@ -119,7 +119,7 @@ describe("AccessGrants", function () {
           });
         });
 
-        describe("When wildcard not given", function () {
+        describe("When not given", function () {
           it("All mathing grants are deleted if all timelocks are expired", async function () {
             const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
 
