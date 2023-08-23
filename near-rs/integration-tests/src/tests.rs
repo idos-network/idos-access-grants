@@ -147,12 +147,15 @@ async fn test_everything(
     assert!(result.is_success());
     assert_eq!(parse_grants(result).len(), 2);
 
-    let in_one_minute = SystemTime::now().duration_since(UNIX_EPOCH)? + Duration::from_secs(60);
+    let in_the_future = SystemTime::now().duration_since(UNIX_EPOCH)? + Duration::from_secs(3600);
+    let in_the_past = SystemTime::now().duration_since(UNIX_EPOCH)? - Duration::from_secs(3600);
+    let in_the_paster = SystemTime::now().duration_since(UNIX_EPOCH)? - 2 * Duration::from_secs(3600);
+    let in_the_pastest = SystemTime::now().duration_since(UNIX_EPOCH)? - 3 * Duration::from_secs(3600);
 
     result = contract_call("insert_grant", json!({
         "grantee": "dave.near",
         "data_id": "A2",
-        "locked_until": in_one_minute.as_nanos(),
+        "locked_until": in_the_future.as_nanos(),
     })).await?;
     assert!(result.is_success());
 
@@ -162,6 +165,75 @@ async fn test_everything(
     })).await?;
     assert!(result.is_failure());
     assert!(result.into_result().unwrap_err().to_string().contains("Grant is timelocked"));
+
+    result = contract_call("insert_grant", json!({
+        "grantee": "eve.near",
+        "data_id": "A3",
+        "locked_until": in_the_past.as_nanos(),
+    })).await?;
+    assert!(result.is_success());
+
+    result = contract_call("delete_grant", json!({
+        "grantee": "eve.near",
+        "data_id": "A3",
+        "locked_until": in_the_past.as_nanos(),
+    })).await?;
+    assert!(result.is_success());
+
+    result = contract_call("grants_by", json!({
+        "grantee": "eve.near",
+    })).await?;
+    assert!(result.is_success());
+    assert_eq!(parse_grants(result).len(), 0);
+
+    result = contract_call("insert_grant", json!({
+        "grantee": "eve.near",
+        "data_id": "A3",
+        "locked_until": in_the_past.as_nanos(),
+    })).await?;
+    assert!(result.is_success());
+
+    result = contract_call("insert_grant", json!({
+        "grantee": "eve.near",
+        "data_id": "A3",
+        "locked_until": in_the_paster.as_nanos(),
+    })).await?;
+    assert!(result.is_success());
+
+    result = contract_call("insert_grant", json!({
+        "grantee": "eve.near",
+        "data_id": "A3",
+        "locked_until": in_the_pastest.as_nanos(),
+    })).await?;
+    assert!(result.is_success());
+
+    result = contract_call("delete_grant", json!({
+        "grantee": "eve.near",
+        "data_id": "A3",
+        "locked_until": in_the_past.as_nanos(),
+    })).await?;
+    assert!(result.is_success());
+
+    result = contract_call("grants_by", json!({
+        "grantee": "eve.near",
+        "data_id": "A3",
+    })).await?;
+    assert!(result.is_success());
+    assert_eq!(parse_grants(result).len(), 2);
+
+    result = contract_call("delete_grant", json!({
+        "grantee": "eve.near",
+        "data_id": "A3",
+        "locked_until": 0,
+    })).await?;
+    assert!(result.is_success());
+
+    result = contract_call("grants_by", json!({
+        "grantee": "eve.near",
+        "data_id": "A3",
+    })).await?;
+    assert!(result.is_success());
+    assert_eq!(parse_grants(result).len(), 0);
 
     println!("      Passed ✅ test_everything");
     Ok(())
