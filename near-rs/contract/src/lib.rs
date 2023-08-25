@@ -96,7 +96,7 @@ impl FractalRegistry {
         let owner = env::predecessor_account_id();
 
         self
-            .grants_by(Some(owner.clone()), Some(grantee.clone()), Some(data_id.clone()))
+            .find_grants(Some(owner.clone()), Some(grantee.clone()), Some(data_id.clone()))
             .iter()
             .filter(|grant| [0, grant.locked_until].contains(&locked_until.unwrap_or(0)))
             .for_each(|grant| {
@@ -125,10 +125,10 @@ impl FractalRegistry {
         grantee: AccountId,
         data_id: String
     ) -> Vec<Grant> {
-        self.grants_by(None, Some(grantee), Some(data_id))
+        self.find_grants(None, Some(grantee), Some(data_id))
     }
 
-    pub fn grants_by(
+    pub fn find_grants(
         &mut self,
         owner: Option<AccountId>,
         grantee: Option<AccountId>,

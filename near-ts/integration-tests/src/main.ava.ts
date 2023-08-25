@@ -66,20 +66,20 @@ test("everything", async (t) => {
     { owner: "test.near", grantee: "bob.near", dataId: "90", lockedUntil: "0" },
   ]);
 
-  let grants_by:Array<Object>;
+  let foundGrants:Array<Object>;
 
-  grants_by = await contract.view("grants_by", {
+  foundGrants = await contract.view("find_grants", {
     grantee: "charlie.near",
     dataId: "90",
   });
 
-  t.deepEqual(grants_by, []);
+  t.deepEqual(foundGrants, []);
 
-  grants_by = await contract.view("grants_by", {
+  foundGrants = await contract.view("find_grants", {
     owner: "test.near",
   });
 
-  t.deepEqual(grants_by, [
+  t.deepEqual(foundGrants, [
     { owner: "test.near", grantee: "bob.near", dataId: "42", lockedUntil: "0" },
     { owner: "test.near", grantee: "bob.near", dataId: "90", lockedUntil: "0" },
     { owner: "test.near", grantee: "charlie.near", dataId: "99", lockedUntil: "0" },
@@ -90,11 +90,11 @@ test("everything", async (t) => {
     dataId: "90",
   });
 
-  grants_by = await contract.view("grants_by", {
+  foundGrants = await contract.view("find_grants", {
     owner: "test.near",
   });
 
-  t.deepEqual(grants_by, [
+  t.deepEqual(foundGrants, [
     { owner: "test.near", grantee: "bob.near", dataId: "42", lockedUntil: "0" },
     { owner: "test.near", grantee: "charlie.near", dataId: "99", lockedUntil: "0" },
   ]);
@@ -119,11 +119,11 @@ test("everything", async (t) => {
 
   t.assert(transactionResult.succeeded);
 
-  grants_by = await contract.view("grants_by", {
+  foundGrants = await contract.view("find_grants", {
     grantee: "dave.near",
   });
 
-  t.assert(grants_by.length == 0);
+  t.assert(foundGrants.length == 0);
 
   await root.call(contract, "insert_grant", {
     grantee: "dave.near",
@@ -138,11 +138,11 @@ test("everything", async (t) => {
 
   t.assert(transactionResult.succeeded);
 
-  grants_by = await contract.view("grants_by", {
+  foundGrants = await contract.view("find_grants", {
     grantee: "dave.near",
   });
 
-  t.assert(grants_by.length == 0);
+  t.assert(foundGrants.length == 0);
 
   transactionResult = await root.callRaw(contract, "delete_grant", {
     grantee: "dave.near",
@@ -152,11 +152,11 @@ test("everything", async (t) => {
 
   t.assert(transactionResult.succeeded);
 
-  grants_by = await contract.view("grants_by", {
+  foundGrants = await contract.view("find_grants", {
     grantee: "dave.near",
   });
 
-  t.assert(grants_by.length == 0);
+  t.assert(foundGrants.length == 0);
 
 
   /*
@@ -180,11 +180,11 @@ test("everything", async (t) => {
   t.assert(transactionResult.failed);
   t.assert(transactionResult.receiptFailureMessagesContain("Grant is timelocked"));
 
-  grants_by = await contract.view("grants_by", {
+  foundGrants = await contract.view("find_grants", {
     grantee: "dave.near",
   });
 
-  t.assert(grants_by.length == 1);
+  t.assert(foundGrants.length == 1);
 
   transactionResult = await root.callRaw(contract, "delete_grant", {
     grantee: "dave.near",
@@ -192,11 +192,11 @@ test("everything", async (t) => {
     lockedUntil: 0,
   });
 
-  grants_by = await contract.view("grants_by", {
+  foundGrants = await contract.view("find_grants", {
     grantee: "dave.near",
   });
 
-  t.assert(grants_by.length == 1);
+  t.assert(foundGrants.length == 1);
 
   t.assert(transactionResult.failed);
   t.assert(transactionResult.receiptFailureMessagesContain("Grant is timelocked"));

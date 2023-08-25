@@ -50,7 +50,7 @@ contract AccessGrants {
       string memory dataId,
       uint256 lockedUntil
     ) external {
-        Grant[] memory grants = grantsBy(msg.sender, grantee, dataId);
+        Grant[] memory grants = findGrants(msg.sender, grantee, dataId);
 
         require(grants.length > 0, "No grants for sender");
 
@@ -74,10 +74,10 @@ contract AccessGrants {
       address grantee,
       string memory dataId
     ) external view returns (Grant[] memory) {
-        return grantsBy(address(0), grantee, dataId);
+        return findGrants(address(0), grantee, dataId);
     }
 
-    function grantsBy(
+    function findGrants(
       address owner,
       address grantee,
       string memory dataId

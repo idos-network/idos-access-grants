@@ -50,7 +50,7 @@ async fn test_everything(
 
     let mut result;
 
-    result = contract_call("grants_by", json!({
+    result = contract_call("find_grants", json!({
         "grantee": "bob.near",
         "data_id": "A1",
     })).await?;
@@ -82,40 +82,40 @@ async fn test_everything(
     })).await?;
     assert!(result.is_success());
 
-    result = contract_call("grants_by", json!({
+    result = contract_call("find_grants", json!({
         "owner": owner,
     })).await?;
     assert!(result.is_success());
     assert_eq!(parse_grants(result).len(), 3);
 
-    result = contract_call("grants_by", json!({
+    result = contract_call("find_grants", json!({
         "grantee": "bob.near",
     })).await?;
     assert!(result.is_success());
     assert_eq!(parse_grants(result).len(), 2);
 
-    result = contract_call("grants_by", json!({
+    result = contract_call("find_grants", json!({
         "owner": owner,
         "grantee": "bob.near",
     })).await?;
     assert!(result.is_success());
     assert_eq!(parse_grants(result).len(), 2);
 
-    result = contract_call("grants_by", json!({
+    result = contract_call("find_grants", json!({
         "owner": owner,
         "data_id": "A2",
     })).await?;
     assert!(result.is_success());
     assert_eq!(parse_grants(result).len(), 2);
 
-    result = contract_call("grants_by", json!({
+    result = contract_call("find_grants", json!({
         "grantee": "bob.near",
         "data_id": "A1",
     })).await?;
     assert!(result.is_success());
     assert_eq!(parse_grants(result).len(), 1);
 
-    result = contract_call("grants_by", json!({
+    result = contract_call("find_grants", json!({
         "grantee": "charlie.near",
         "data_id": "A1"
     })).await?;
@@ -128,20 +128,20 @@ async fn test_everything(
     })).await?;
     assert!(result.is_success());
 
-    result = contract_call("grants_by", json!({
+    result = contract_call("find_grants", json!({
         "grantee": "bob.near",
     })).await?;
     assert!(result.is_success());
     assert_eq!(parse_grants(result).len(), 1);
 
-    result = contract_call("grants_by", json!({
+    result = contract_call("find_grants", json!({
         "grantee": "bob.near",
         "data_id": "A1",
     })).await?;
     assert!(result.is_success());
     assert_eq!(parse_grants(result).len(), 0);
 
-    result = contract_call("grants_by", json!({
+    result = contract_call("find_grants", json!({
         "owner": owner,
     })).await?;
     assert!(result.is_success());
@@ -180,7 +180,7 @@ async fn test_everything(
     })).await?;
     assert!(result.is_success());
 
-    result = contract_call("grants_by", json!({
+    result = contract_call("find_grants", json!({
         "grantee": "eve.near",
     })).await?;
     assert!(result.is_success());
@@ -214,7 +214,7 @@ async fn test_everything(
     })).await?;
     assert!(result.is_success());
 
-    result = contract_call("grants_by", json!({
+    result = contract_call("find_grants", json!({
         "grantee": "eve.near",
         "data_id": "A3",
     })).await?;
@@ -228,7 +228,7 @@ async fn test_everything(
     })).await?;
     assert!(result.is_success());
 
-    result = contract_call("grants_by", json!({
+    result = contract_call("find_grants", json!({
         "grantee": "eve.near",
         "data_id": "A3",
     })).await?;

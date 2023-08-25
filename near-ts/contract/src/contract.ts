@@ -89,7 +89,7 @@ class AccessGrants {
     const owner = near.signerAccountId();
     lockedUntil = lockedUntil || 0n;
 
-    const grants = this.grants_by({ owner, grantee, dataId });
+    const grants = this.find_grants({ owner, grantee, dataId });
 
     grants.forEach((grant) => {
       if (lockedUntil == 0n || grant.lockedUntil == lockedUntil) {
@@ -123,12 +123,12 @@ class AccessGrants {
     grantee: AccountId,
     dataId: string,
   }): Grant[] {
-    return this.grants_by({ owner: null, grantee, dataId });
+    return this.find_grants({ owner: null, grantee, dataId });
   }
 
 
   @view({})
-  grants_by({
+  find_grants({
     owner,
     grantee,
     dataId,
