@@ -1,6 +1,8 @@
 # idos-access-grants
 
-Driving access control to idOS data using on-chain access grants.
+When receiving a signed request for data not owned by the signer, idOS nodes use these smart contracts as the source of truth for authorizing (or denying) the request.
+
+The contract functionality is straightforward:
 
 - **a grant** is an IDOS object representing a data access grant from an owner to a grantee for a given data ID (optionally with a timelock)
 - the contract **stores a collection of grants**
@@ -9,15 +11,26 @@ Driving access control to idOS data using on-chain access grants.
     - **create a grant** that they own
     - **delete a grant** that they own (unless timelocked)
 
-## Implementations
+## Contracts
 
-- EVM
-    - solidity: [evm](evm)
-- NEAR
-    - TypeScript: [near-ts](near-ts)
-    - Rust: [near-rs](near-rs)
+**Implementations:**
+
+| Target VM | Language | Source |
+| :- | :- | :- |
+| EVM | Solidity | [evm](evm) |
+| NEAR VM | Rust | [near-rs](near-rs) |
+| NEAR VM | TypeScript | [near-ts](near-ts) |
+
+**Deployments:**
+
+| Chain | Implementations |
+| :- | :- |
+| Goerli | [`0x56272dd0C469B2D831a86a81f3E1eeCb0bDe8850`](https://goerli.etherscan.io/address/0x56272dd0c469b2d831a86a81f3e1eecb0bde8850#code) |
+| NEAR Testnet | [`dev-20230822145635-43013572991135`](https://explorer.testnet.near.org/accounts/dev-20230822145635-43013572991135) |
 
 ## Interface
+
+**ℹ️ Note:** while this abstract interface description uses mixedCase, the implementations above follow the style guide of the respective language. For example, in EVM + Solidity we use mixedCase (`grantsBy`), while in NEAR VM + Rust/TypeScript we use snake_case (`grants_by`).
 
 ### Objects
 
