@@ -1,6 +1,6 @@
 # idos-access-grants
 
-# tl;dr:
+Driving access control to idOS data using on-chain access grants.
 
 - **a grant** is an IDOS object representing a data access grant from an owner to a grantee for a given data ID (optionally with a timelock)
 - the contract **stores a collection of grants**
@@ -9,11 +9,19 @@
     - **create a grant** that they own
     - **delete a grant** that they own (unless timelocked)
 
-# Interface
+## Implementations
 
-## Objects
+- EVM
+    - solidity: [evm](evm)
+- NEAR
+    - TypeScript: [near-ts](near-ts)
+    - Rust: [near-rs](near-rs)
 
-<details><summary><h3><code>Grant</code></h3></summary>
+## Interface
+
+### Objects
+
+<details><summary><h4><code>Grant</code></h4></summary>
 
 Represents an access grant from a data owner, to a grantee, for a given data ID, until a given time.
 
@@ -25,9 +33,9 @@ Represents an access grant from a data owner, to a grantee, for a given data ID,
 
 </details>
 
-## Functions
+### Functions
 
-<details><summary><h3><code>insertGrant</code></h3></summary>
+<details><summary><h4><code>insertGrant</code></h4></summary>
 
 Creates a new access grant.
 
@@ -46,7 +54,7 @@ Creates a new access grant.
 
 </details>
 
-<details><summary><h3><code>deleteGrant</code></h3></summary>
+<details><summary><h4><code>deleteGrant</code></h4></summary>
 
 Deletes an existing access grant.
 
@@ -69,7 +77,7 @@ Deletes an existing access grant.
 
 </details>
 
-<details><summary><h3><code>findGrants</code></h3></summary>
+<details><summary><h4><code>findGrants</code></h4></summary>
 
 Lists grants matching the provided arguments.
 
@@ -100,7 +108,7 @@ A list of 0+ `Grant`s
 
 </details>
 
-<details><summary><h3><code>grantsFor</code></h3></summary>
+<details><summary><h4><code>grantsFor</code></h4></summary>
 
 Lists grants matching the provided arguments.
 
@@ -119,9 +127,3 @@ Calls `grantsBy` with no `owner` argument.
 A list of 0+ `Grant`s
 
 </details>
-
-
-
-
-
-
