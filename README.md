@@ -30,7 +30,7 @@ The contract functionality is straightforward:
 
 ## Interface
 
-**ℹ️ Note:** while this abstract interface description uses mixedCase, the implementations above follow the style guide of the respective language. For example, in EVM + Solidity we use mixedCase (`grantsBy`), while in NEAR VM + Rust/TypeScript we use snake_case (`grants_by`).
+**ℹ️ Note:** while this abstract interface description uses mixedCase, the implementations above follow the style guide of the respective language. For example, in EVM + Solidity we use mixedCase (`insertGrant`), while in NEAR VM + Rust/TypeScript we use snake_case (`insert_grant`).
 
 ### Objects
 
