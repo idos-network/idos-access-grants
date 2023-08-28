@@ -23,7 +23,7 @@ The contract functionality is straightforward:
 
 **Deployments:**
 
-| Chain | Implementations |
+| Chain | Address |
 | :- | :- |
 | Goerli | [`0x56272dd0C469B2D831a86a81f3E1eeCb0bDe8850`](https://goerli.etherscan.io/address/0x56272dd0c469b2d831a86a81f3e1eecb0bde8850#code) |
 | NEAR Testnet | [`dev-20230822145635-43013572991135`](https://explorer.testnet.near.org/accounts/dev-20230822145635-43013572991135) |
