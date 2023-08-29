@@ -1,4 +1,4 @@
-# idos-access-grants
+# idOS access grant contracts
 
 When receiving a signed request for data not owned by the signer, idOS nodes use these smart contracts as the source of truth for authorizing (or denying) the request.
 
@@ -30,7 +30,10 @@ The contract functionality is straightforward:
 
 ## Interface
 
-**ℹ️ Note:** while this abstract interface description uses mixedCase, the implementations above follow the style guide of the respective language. For example, in EVM + Solidity we use mixedCase (`insertGrant`), while in NEAR VM + Rust/TypeScript we use snake_case (`insert_grant`).
+> [!NOTE]
+> This interface description uses mixedCase, but each implementation follows the respective language's style guide, e.g.:
+> * in EVM + Solidity, we use mixedCase (`insertGrant`)
+> * in NEAR VM + Rust/TypeScript, we use snake_case (`insert_grant`).
 
 ### Objects
 
