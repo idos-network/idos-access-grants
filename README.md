@@ -4,7 +4,7 @@ When receiving a signed request for data not owned by the signer, idOS nodes use
 
 The contract functionality is straightforward:
 
-- **a grant** is an IDOS object representing a data access grant from an owner to a grantee for a given data ID (optionally with a timelock)
+- **a grant** is an idOS object representing a data access grant from an owner to a grantee for a given data ID (optionally with a timelock)
 - the contract **stores a collection of grants**
 - **anyone** can **list grants**
 - a **signer** can
