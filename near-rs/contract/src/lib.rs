@@ -121,7 +121,7 @@ impl FractalRegistry {
     }
 
     pub fn grants_for(
-        &mut self,
+        &self,
         grantee: AccountId,
         data_id: String
     ) -> Vec<Grant> {
@@ -129,7 +129,7 @@ impl FractalRegistry {
     }
 
     pub fn find_grants(
-        &mut self,
+        &self,
         owner: Option<AccountId>,
         grantee: Option<AccountId>,
         data_id: Option<String>
