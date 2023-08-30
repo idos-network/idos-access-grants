@@ -1,2 +1,9 @@
-artifacts
+# ugh
+artifacts/*
+!artifacts/contracts
+artifacts/contracts/*
+!artifacts/contracts/AccessGrants.sol
+artifacts/contracts/AccessGrants.sol/*
+!artifacts/contracts/AccessGrants.sol/AccessGrants.json
+
 cache
