@@ -7,10 +7,10 @@ contract AccessGrants {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
     struct Grant {
-      address owner;
-      address grantee;
-      string dataId;
-      uint256 lockedUntil;
+        address owner;
+        address grantee;
+        string dataId;
+        uint256 lockedUntil;
     }
 
     mapping(bytes32 => Grant) private _grantsById;
@@ -24,9 +24,9 @@ contract AccessGrants {
     constructor() {}
 
     function insertGrant(
-      address grantee,
-      string memory dataId,
-      uint256 lockedUntil
+        address grantee,
+        string memory dataId,
+        uint256 lockedUntil
     ) external {
         Grant memory grant = Grant({
             owner: msg.sender,
@@ -46,53 +46,53 @@ contract AccessGrants {
     }
 
     function deleteGrant(
-      address grantee,
-      string memory dataId,
-      uint256 lockedUntil
+        address grantee,
+        string memory dataId,
+        uint256 lockedUntil
     ) external {
         Grant[] memory grants = findGrants(msg.sender, grantee, dataId);
 
         require(grants.length > 0, "No grants for sender");
 
         for (uint256 i = 0; i < grants.length; i++) {
-          Grant memory grant = grants[i];
+            Grant memory grant = grants[i];
 
-          if (lockedUntil == 0 || grants[i].lockedUntil == lockedUntil) {
-            require(grant.lockedUntil < block.timestamp, "Grant is timelocked");
+            if (lockedUntil == 0 || grants[i].lockedUntil == lockedUntil) {
+                require(grant.lockedUntil < block.timestamp, "Grant is timelocked");
 
-            bytes32 grantId = _deriveGrantId(grant);
+                bytes32 grantId = _deriveGrantId(grant);
 
-            delete _grantsById[grantId];
-            _grantIdsByOwner[grant.owner].remove(grantId);
-            _grantIdsByGrantee[grant.grantee].remove(grantId);
-            _grantIdsByDataId[grant.dataId].remove(grantId);
-          }
+                delete _grantsById[grantId];
+                _grantIdsByOwner[grant.owner].remove(grantId);
+                _grantIdsByGrantee[grant.grantee].remove(grantId);
+                _grantIdsByDataId[grant.dataId].remove(grantId);
+            }
         }
     }
 
     function grantsFor(
-      address grantee,
-      string memory dataId
+        address grantee,
+        string memory dataId
     ) external view returns (Grant[] memory) {
         return findGrants(address(0), grantee, dataId);
     }
 
     function findGrants(
-      address owner,
-      address grantee,
-      string memory dataId
+        address owner,
+        address grantee,
+        string memory dataId
     ) public view returns (Grant[] memory) {
         bytes32[] memory candidateGrantIds;
         uint256 candidateGrantCount;
 
         if (owner != address(0)) {
-          candidateGrantIds = _grantIdsByOwner[owner].values();
-          candidateGrantCount = _grantIdsByOwner[owner].length();
+            candidateGrantIds = _grantIdsByOwner[owner].values();
+            candidateGrantCount = _grantIdsByOwner[owner].length();
         } else if (grantee != address(0)) {
-          candidateGrantIds = _grantIdsByGrantee[grantee].values();
-          candidateGrantCount = _grantIdsByGrantee[grantee].length();
+            candidateGrantIds = _grantIdsByGrantee[grantee].values();
+            candidateGrantCount = _grantIdsByGrantee[grantee].length();
         } else {
-          revert("Neither owner nor grantee provided");
+            revert("Neither owner nor grantee provided");
         }
 
         uint256 returnCount = 0;
@@ -103,18 +103,18 @@ contract AccessGrants {
             bool returnCandidate = false;
 
             returnCandidate =
-              grantee == address(0)
-              || _grantIdsByGrantee[grantee].contains(candidateGrantId);
+                grantee == address(0)
+                    || _grantIdsByGrantee[grantee].contains(candidateGrantId);
 
-            returnCandidate = returnCandidate && (
-              _isWildcardDataId(dataId)
-              || _grantIdsByDataId[dataId].contains(candidateGrantId)
-            );
+                    returnCandidate = returnCandidate && (
+                        _isWildcardDataId(dataId)
+                            || _grantIdsByDataId[dataId].contains(candidateGrantId)
+                    );
 
-            if (returnCandidate) {
-                returnCount++;
-                keepList[i] = true;
-            }
+                    if (returnCandidate) {
+                        returnCount++;
+                        keepList[i] = true;
+                    }
         }
 
         Grant[] memory grants = new Grant[](returnCount);
@@ -131,19 +131,19 @@ contract AccessGrants {
     }
 
     function _deriveGrantId(
-      Grant memory grant
+        Grant memory grant
     ) private pure returns (bytes32) {
         return keccak256(abi.encodePacked(
-          grant.owner,
-          grant.grantee,
-          grant.dataId,
-          grant.lockedUntil
+            grant.owner,
+            grant.grantee,
+            grant.dataId,
+            grant.lockedUntil
         ));
     }
 
     function _isWildcardDataId(
         string memory dataId
     ) private pure returns (bool) {
-      return keccak256(abi.encodePacked((dataId))) == _WILDCARD_DATA_ID;
+        return keccak256(abi.encodePacked((dataId))) == _WILDCARD_DATA_ID;
     }
 }
