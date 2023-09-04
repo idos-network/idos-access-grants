@@ -89,10 +89,6 @@ contract AccessGrants {
         bytes32[] memory candidateGrantIds;
         uint256 candidateGrantCount;
 
-        // REVIEWME This feels like a sharp edge.
-        // If somebody calls this with both owner and grantee,
-        // we never filter by both. Was that by design? Maybe
-        // we're missing an `&&` branch for `returnCandidate`?
         if (owner != address(0)) {
             candidateGrantIds = _grantIdsByOwner[owner].values();
             candidateGrantCount = _grantIdsByOwner[owner].length();
