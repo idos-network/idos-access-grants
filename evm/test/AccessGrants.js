@@ -7,7 +7,9 @@ const NO_TIMELOCK = 0n;
 
 describe("AccessGrants", function () {
   async function deployAndPopulateContractFixture() {
-    const [, signer1, signer2, signer3, signer4] = await ethers.getSigners();
+    // REVIEWME, nit. Ignoring the var like this is getting on my nerves. It doesn't
+    // make it obvious if it was a mistake or on purpose.
+    const [_signer0, signer1, signer2, signer3, signer4] = await ethers.getSigners();
 
     const AccessGrants = await ethers.getContractFactory("AccessGrants");
     const accessGrants = await AccessGrants.deploy();
