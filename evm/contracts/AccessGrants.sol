@@ -58,6 +58,9 @@ contract AccessGrants {
             Grant memory grant = grants[i];
 
             if (lockedUntil == 0 || grants[i].lockedUntil == lockedUntil) {
+                // REVIEWME, low prio. Please remember that `block.timestamp` can be
+                // manipulated by an incentivized miner. I don't think that's a big
+                // deal here, since the practical drift in less than a day, AFAIK.
                 require(grant.lockedUntil < block.timestamp, "Grant is timelocked");
 
                 bytes32 grantId = _deriveGrantId(grant);
