@@ -37,6 +37,7 @@ pub fn derive_grant_id(grant: &Grant) -> String {
 
 impl Default for FractalRegistry {
     fn default() -> Self {
+        // REVIEWME Let's leave a note on why we started with `g` and not another letter.
         let grants_by_id = LookupMap::new(b"g");
         let grant_ids_by_owner = LookupMap::new(b"h");
         let grant_ids_by_grantee = LookupMap::new(b"i");
