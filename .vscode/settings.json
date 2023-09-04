@@ -1,0 +1,6 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "near-rs/contract/Cargo.toml",
+        "near-rs/integration-tests/Cargo.toml"
+    ]
+}
