@@ -100,21 +100,18 @@ contract AccessGrants {
 
         for (uint256 i = 0; i < candidateGrantCount; i++) {
             bytes32 candidateGrantId = candidateGrantIds[i];
-            bool returnCandidate = false;
 
-            returnCandidate =
-                grantee == address(0)
-                    || _grantIdsByGrantee[grantee].contains(candidateGrantId);
+            bool returnCandidate =
+                (
+                    grantee == address(0) || _grantIdsByGrantee[grantee].contains(candidateGrantId)
+                ) && (
+                    _isWildcardDataId(dataId) || _grantIdsByDataId[dataId].contains(candidateGrantId)
+                );
 
-                    returnCandidate = returnCandidate && (
-                        _isWildcardDataId(dataId)
-                            || _grantIdsByDataId[dataId].contains(candidateGrantId)
-                    );
-
-                    if (returnCandidate) {
-                        returnCount++;
-                        keepList[i] = true;
-                    }
+            if (returnCandidate) {
+                returnCount++;
+                keepList[i] = true;
+            }
         }
 
         Grant[] memory grants = new Grant[](returnCount);
