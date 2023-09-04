@@ -57,7 +57,7 @@ impl FractalRegistry {
         &mut self,
         grantee: AccountId,
         data_id: String,
-        locked_until: Option<u64>
+        locked_until: Option<EpochHeight>
     ) {
         let owner = env::predecessor_account_id();
 
@@ -91,7 +91,7 @@ impl FractalRegistry {
         &mut self,
         grantee: AccountId,
         data_id: String,
-        locked_until: Option<u64>
+        locked_until: Option<EpochHeight>
     ) {
         let owner = env::predecessor_account_id();
 
