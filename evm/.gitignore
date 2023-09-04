@@ -7,3 +7,4 @@ artifacts/contracts/AccessGrants.sol/*
 !artifacts/contracts/AccessGrants.sol/AccessGrants.json
 
 cache
+node_modules
