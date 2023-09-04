@@ -74,17 +74,17 @@ impl FractalRegistry {
 
         self.grants_by_id.insert(&grant_id, &grant);
 
-        let mut grant_ids_owner = self.grant_ids_by_owner.get(&owner.clone()).unwrap_or(vec!{});
+        let mut grant_ids_owner = self.grant_ids_by_owner.get(&owner).unwrap_or(vec!{});
         grant_ids_owner.push(grant_id.clone());
-        self.grant_ids_by_owner.insert(&owner.clone(), &grant_ids_owner);
+        self.grant_ids_by_owner.insert(&owner, &grant_ids_owner);
 
-        let mut grant_ids_grantee = self.grant_ids_by_grantee.get(&grantee.clone()).unwrap_or(vec!{});
+        let mut grant_ids_grantee = self.grant_ids_by_grantee.get(&grantee).unwrap_or(vec!{});
         grant_ids_grantee.push(grant_id.clone());
-        self.grant_ids_by_grantee.insert(&grantee.clone(), &grant_ids_grantee);
+        self.grant_ids_by_grantee.insert(&grantee, &grant_ids_grantee);
 
-        let mut grant_ids_data_id = self.grant_ids_by_data_id.get(&data_id.clone()).unwrap_or(vec!{});
+        let mut grant_ids_data_id = self.grant_ids_by_data_id.get(&data_id).unwrap_or(vec!{});
         grant_ids_data_id.push(grant_id.clone());
-        self.grant_ids_by_data_id.insert(&data_id.clone(), &grant_ids_data_id);
+        self.grant_ids_by_data_id.insert(&data_id, &grant_ids_data_id);
     }
 
     pub fn delete_grant(
