@@ -4,6 +4,7 @@ use near_units::parse_near;
 use serde::Deserialize;
 use serde_json::json;
 use workspaces::{Account, Contract};
+use workspaces::result::{Result, ExecutionFinalResult};
 
 #[derive(Deserialize)]
 pub struct Grant {
@@ -35,129 +36,139 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
+pub struct ContractConnection<'a> {
+    user: &'a Account,
+    contract: &'a Contract,
+}
+
+impl <'a> ContractConnection<'_> {
+    async fn transact(&self, method: &str, json_args: serde_json::Value) -> Result<ExecutionFinalResult> {
+        self.user
+            .call(self.contract.id(), method)
+            .args_json(json_args)
+            .transact()
+            .await
+    }
+
+    async fn insert_grant(&self, json_args: serde_json::Value) -> Result<ExecutionFinalResult> {
+        self.transact("insert_grant", json_args).await
+    }
+
+    async fn delete_grant(&self, json_args: serde_json::Value) -> Result<ExecutionFinalResult> {
+        self.transact("delete_grant", json_args).await
+    }
+
+    async fn find_grants(&self, json_args: serde_json::Value) -> anyhow::Result<Vec<Grant>> {
+        Ok(
+            self.user
+                .call(self.contract.id(), "find_grants")
+                .args_json(json_args)
+                .view()
+                .await?
+                .json::<Vec<Grant>>().unwrap()
+        )
+    }
+}
+
 async fn test_everything(
     user: &Account,
     contract: &Contract,
 ) -> anyhow::Result<()> {
     let owner = user.id().as_str();
+    let (mut grants, mut result);
+    let connection = ContractConnection{ user, contract };
 
-    let mut result;
-    let mut grants;
-
-    grants = user
-        .call(contract.id(), "find_grants")
-        .args_json(json!({"grantee": "bob.near", "data_id": "A1"}))
-        .view()
-        .await?
-        .json::<Vec<Grant>>().unwrap();
+    grants = connection.find_grants(json!({
+        "grantee": "bob.near",
+        "data_id": "A1",
+    })).await?;
     assert_eq!(grants.len(), 0);
 
-    result = user
-        .call(contract.id(), "insert_grant")
-        .args_json(json!({"grantee": "bob.near", "data_id": "A1"}))
-        .transact()
-        .await?;
+    grants = connection.find_grants(json!({
+        "grantee": "bob.near",
+        "data_id": "A1",
+    })).await?;
+    assert_eq!(grants.len(), 0);
+
+    result = connection.insert_grant(json!({
+        "grantee": "bob.near",
+        "data_id": "A1",
+    })).await?;
     assert!(result.is_success());
 
-    result = user
-        .call(contract.id(), "insert_grant")
-        .args_json(json!({"grantee": "bob.near", "data_id": "A1"}))
-        .transact()
-        .await?;
+    result = connection.insert_grant(json!({
+        "grantee": "bob.near",
+        "data_id": "A1",
+    })).await?;
     assert!(result.is_failure());
     assert!(result.into_result().unwrap_err().to_string().contains("Grant already exists"));
 
-    result = user
-        .call(contract.id(), "insert_grant")
-        .args_json(json!({"grantee": "bob.near", "data_id": "A2"}))
-        .transact()
-        .await?;
+    result = connection.insert_grant(json!({
+        "grantee": "bob.near",
+        "data_id": "A2",
+    })).await?;
     assert!(result.is_success());
 
-    result = user
-        .call(contract.id(), "insert_grant")
-        .args_json(json!({"grantee": "charlie.near", "data_id": "A2"}))
-        .transact()
-        .await?;
+    result = connection.insert_grant(json!({
+        "grantee": "charlie.near",
+        "data_id": "A2",
+    })).await?;
     assert!(result.is_success());
 
-    grants = user
-        .call(contract.id(), "find_grants")
-        .args_json(json!({"owner": owner}))
-        .view()
-        .await?
-        .json::<Vec<Grant>>().unwrap();
+    grants = connection.find_grants(json!({
+        "owner": owner,
+    })).await?;
     assert_eq!(grants.len(), 3);
 
-    grants = user
-        .call(contract.id(), "find_grants")
-        .args_json(json!({"grantee": "bob.near"}))
-        .view()
-        .await?
-        .json::<Vec<Grant>>().unwrap();
+    grants = connection.find_grants(json!({
+        "grantee": "bob.near",
+    })).await?;
     assert_eq!(grants.len(), 2);
 
-    grants = user
-        .call(contract.id(), "find_grants")
-        .args_json(json!({"owner": owner, "grantee": "bob.near"}))
-        .view()
-        .await?
-        .json::<Vec<Grant>>().unwrap();
+    grants = connection.find_grants(json!({
+        "owner": owner,
+        "grantee": "bob.near",
+    })).await?;
     assert_eq!(grants.len(), 2);
 
-    grants = user
-        .call(contract.id(), "find_grants")
-        .args_json(json!({"owner": owner, "data_id": "A2"}))
-        .view()
-        .await?
-        .json::<Vec<Grant>>().unwrap();
+    grants = connection.find_grants(json!({
+        "owner": owner,
+        "data_id": "A2",
+    })).await?;
     assert_eq!(grants.len(), 2);
 
-    grants = user
-        .call(contract.id(), "find_grants")
-        .args_json(json!({"grantee": "bob.near", "data_id": "A1"}))
-        .view()
-        .await?
-        .json::<Vec<Grant>>().unwrap();
+    grants = connection.find_grants(json!({
+        "grantee": "bob.near",
+        "data_id": "A1",
+    })).await?;
     assert_eq!(grants.len(), 1);
 
-    grants = user
-        .call(contract.id(), "find_grants")
-        .args_json(json!({"grantee": "charlie.near", "data_id": "A1"}))
-        .view()
-        .await?
-        .json::<Vec<Grant>>().unwrap();
+    grants = connection.find_grants(json!({
+        "grantee": "charlie.near",
+        "data_id": "A1",
+    })).await?;
     assert_eq!(grants.len(), 0);
 
-    result = user
-        .call(contract.id(), "delete_grant")
-        .args_json(json!({"grantee": "bob.near", "data_id": "A1"}))
-        .transact()
-        .await?;
+    result = connection.delete_grant(json!({
+        "grantee": "bob.near",
+        "data_id": "A1",
+    })).await?;
     assert!(result.is_success());
 
-    grants = user
-        .call(contract.id(), "find_grants")
-        .args_json(json!({"grantee": "bob.near"}))
-        .view()
-        .await?
-        .json::<Vec<Grant>>().unwrap();
+    grants = connection.find_grants(json!({
+        "grantee": "bob.near",
+    })).await?;
     assert_eq!(grants.len(), 1);
 
-    grants = user
-        .call(contract.id(), "find_grants")
-        .args_json(json!({"grantee": "bob.near", "data_id": "A1"}))
-        .view()
-        .await?
-        .json::<Vec<Grant>>().unwrap();
+    grants = connection.find_grants(json!({
+        "grantee": "bob.near",
+        "data_id": "A1",
+    })).await?;
     assert_eq!(grants.len(), 0);
 
-    grants = user
-        .call(contract.id(), "find_grants")
-        .args_json(json!({"owner": owner}))
-        .view()
-        .await?
-        .json::<Vec<Grant>>().unwrap();
+    grants = connection.find_grants(json!({
+        "owner": owner,
+    })).await?;
     assert_eq!(grants.len(), 2);
 
     let in_the_future = (SystemTime::now().duration_since(UNIX_EPOCH)? + Duration::from_secs(3600)).as_nanos();
@@ -165,92 +176,84 @@ async fn test_everything(
     let in_the_paster = (SystemTime::now().duration_since(UNIX_EPOCH)? - 2 * Duration::from_secs(3600)).as_nanos();
     let in_the_pastest = (SystemTime::now().duration_since(UNIX_EPOCH)? - 3 * Duration::from_secs(3600)).as_nanos();
 
-    result = user
-        .call(contract.id(), "insert_grant")
-        .args_json(json!({"grantee": "dave.near", "data_id": "A2", "locked_until": in_the_future}))
-        .transact()
-        .await?;
+    result = connection.insert_grant(json!({
+        "grantee": "dave.near",
+        "data_id": "A2",
+        "locked_until": in_the_future,
+    })).await?;
     assert!(result.is_success());
 
-    result = user
-        .call(contract.id(), "delete_grant")
-        .args_json(json!({"grantee": "dave.near", "data_id": "A2"}))
-        .transact()
-        .await?;
+    result = connection.delete_grant(json!({
+        "grantee": "dave.near",
+        "data_id": "A2",
+    })).await?;
     assert!(result.is_failure());
     assert!(result.into_result().unwrap_err().to_string().contains("Grant is timelocked"));
 
-    result = user
-        .call(contract.id(), "insert_grant")
-        .args_json(json!({"grantee": "eve.near", "data_id": "A3", "locked_until": in_the_past}))
-        .transact()
-        .await?;
+    result = connection.insert_grant(json!({
+        "grantee": "eve.near",
+        "data_id": "A3",
+        "locked_until": in_the_past,
+    })).await?;
     assert!(result.is_success());
 
-    result = user
-        .call(contract.id(), "delete_grant")
-        .args_json(json!({"grantee": "eve.near", "data_id": "A3", "locked_until": in_the_past}))
-        .transact()
-        .await?;
+    result = connection.delete_grant(json!({
+        "grantee": "eve.near",
+        "data_id": "A3",
+        "locked_until": in_the_past,
+    })).await?;
     assert!(result.is_success());
 
-    grants = user
-        .call(contract.id(), "find_grants")
-        .args_json(json!({"grantee": "eve.near"}))
-        .view()
-        .await?
-        .json::<Vec<Grant>>().unwrap();
+    grants = connection.find_grants(json!({
+        "grantee": "eve.near",
+    })).await?;
     assert_eq!(grants.len(), 0);
 
-    result = user
-        .call(contract.id(), "insert_grant")
-        .args_json(json!({"grantee": "eve.near", "data_id": "A3", "locked_until": in_the_past}))
-        .transact()
-        .await?;
+    result = connection.insert_grant(json!({
+        "grantee": "eve.near",
+        "data_id": "A3",
+        "locked_until": in_the_past,
+    })).await?;
     assert!(result.is_success());
 
-    result = user
-        .call(contract.id(), "insert_grant")
-        .args_json(json!({"grantee": "eve.near", "data_id": "A3", "locked_until": in_the_paster}))
-        .transact()
-        .await?;
+    result = connection.insert_grant(json!({
+        "grantee": "eve.near",
+        "data_id": "A3",
+        "locked_until": in_the_paster,
+    })).await?;
     assert!(result.is_success());
 
-    result = user
-        .call(contract.id(), "insert_grant")
-        .args_json(json!({"grantee": "eve.near", "data_id": "A3", "locked_until": in_the_pastest}))
-        .transact()
-        .await?;
+    result = connection.insert_grant(json!({
+        "grantee": "eve.near",
+        "data_id": "A3",
+        "locked_until": in_the_pastest,
+    })).await?;
     assert!(result.is_success());
 
-    result = user
-        .call(contract.id(), "delete_grant")
-        .args_json(json!({"grantee": "eve.near", "data_id": "A3", "locked_until": in_the_past}))
-        .transact()
-        .await?;
+    result = connection.delete_grant(json!({
+        "grantee": "eve.near",
+        "data_id": "A3",
+        "locked_until": in_the_past,
+    })).await?;
     assert!(result.is_success());
 
-    grants = user
-        .call(contract.id(), "find_grants")
-        .args_json(json!({"grantee": "eve.near", "data_id": "A3"}))
-        .view()
-        .await?
-        .json::<Vec<Grant>>().unwrap();
+    grants = connection.find_grants(json!({
+        "grantee": "eve.near",
+        "data_id": "A3",
+    })).await?;
     assert_eq!(grants.len(), 2);
 
-    result = user
-        .call(contract.id(), "delete_grant")
-        .args_json(json!({"grantee": "eve.near", "data_id": "A3", "locked_until": 0}))
-        .transact()
-        .await?;
+    result = connection.delete_grant(json!({
+        "grantee": "eve.near",
+        "data_id": "A3",
+        "locked_until": 0,
+    })).await?;
     assert!(result.is_success());
 
-    grants = user
-        .call(contract.id(), "find_grants")
-        .args_json(json!({"grantee": "eve.near", "data_id": "A3"}))
-        .view()
-        .await?
-        .json::<Vec<Grant>>().unwrap();
+    grants = connection.find_grants(json!({
+        "grantee": "eve.near",
+        "data_id": "A3",
+    })).await?;
     assert_eq!(grants.len(), 0);
 
     println!("      Passed ✅ test_everything");
