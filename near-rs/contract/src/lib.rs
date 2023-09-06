@@ -1,8 +1,8 @@
-use near_sdk::serde::Serialize;
-use near_sdk::{env, AccountId, EpochHeight, near_bindgen, require};
+use hex;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
-use hex;
+use near_sdk::serde::Serialize;
+use near_sdk::{env, near_bindgen, require, AccountId, EpochHeight};
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize)]
@@ -26,10 +26,7 @@ pub struct Grant {
 pub fn derive_grant_id(grant: &Grant) -> String {
     let id = format!(
         "{}{}{}{}",
-        grant.owner,
-        grant.grantee,
-        grant.data_id,
-        grant.locked_until,
+        grant.owner, grant.grantee, grant.data_id, grant.locked_until,
     );
 
     hex::encode(env::keccak256(id.as_bytes()))
@@ -51,10 +48,7 @@ impl Default for FractalRegistry {
     }
 }
 
-fn push_at_the_end<
-    K: BorshSerialize,
-    V: BorshDeserialize + BorshSerialize + Clone
->(
+fn push_at_the_end<K: BorshSerialize, V: BorshDeserialize + BorshSerialize + Clone>(
     collection: &mut LookupMap<K, Vec<V>>,
     key: &K,
     value: &V,
@@ -70,7 +64,7 @@ impl FractalRegistry {
         &mut self,
         grantee: AccountId,
         data_id: String,
-        locked_until: Option<EpochHeight>
+        locked_until: Option<EpochHeight>,
     ) {
         let owner = env::predecessor_account_id();
 
@@ -83,7 +77,10 @@ impl FractalRegistry {
 
         let grant_id = derive_grant_id(&grant);
 
-        require!(!self.grants_by_id.contains_key(&grant_id), "Grant already exists");
+        require!(
+            !self.grants_by_id.contains_key(&grant_id),
+            "Grant already exists"
+        );
 
         self.grants_by_id.insert(&grant_id, &grant);
 
@@ -96,40 +93,45 @@ impl FractalRegistry {
         &mut self,
         grantee: AccountId,
         data_id: String,
-        locked_until: Option<EpochHeight>
+        locked_until: Option<EpochHeight>,
     ) {
         let owner = env::predecessor_account_id();
 
-        self
-            .find_grants(Some(owner.clone()), Some(grantee.clone()), Some(data_id.clone()))
-            .iter()
-            .filter(|grant| [0, grant.locked_until].contains(&locked_until.unwrap_or(0)))
-            .for_each(|grant| {
-                require!(grant.locked_until < env::block_timestamp(), "Grant is timelocked");
+        self.find_grants(
+            Some(owner.clone()),
+            Some(grantee.clone()),
+            Some(data_id.clone()),
+        )
+        .iter()
+        .filter(|grant| [0, grant.locked_until].contains(&locked_until.unwrap_or(0)))
+        .for_each(|grant| {
+            require!(
+                grant.locked_until < env::block_timestamp(),
+                "Grant is timelocked"
+            );
 
-                let grant_id = derive_grant_id(&grant);
+            let grant_id = derive_grant_id(&grant);
 
-                self.grants_by_id.remove(&grant_id);
+            self.grants_by_id.remove(&grant_id);
 
-                let mut grant_ids_owner = self.grant_ids_by_owner.get(&owner.clone()).unwrap();
-                grant_ids_owner.retain(|id| *id != grant_id);
-                self.grant_ids_by_owner.insert(&owner.clone(), &grant_ids_owner);
+            let mut grant_ids_owner = self.grant_ids_by_owner.get(&owner.clone()).unwrap();
+            grant_ids_owner.retain(|id| *id != grant_id);
+            self.grant_ids_by_owner
+                .insert(&owner.clone(), &grant_ids_owner);
 
-                let mut grant_ids_grantee = self.grant_ids_by_grantee.get(&grantee.clone()).unwrap();
-                grant_ids_grantee.retain(|id| *id != grant_id);
-                self.grant_ids_by_grantee.insert(&grantee.clone(), &grant_ids_grantee);
+            let mut grant_ids_grantee = self.grant_ids_by_grantee.get(&grantee.clone()).unwrap();
+            grant_ids_grantee.retain(|id| *id != grant_id);
+            self.grant_ids_by_grantee
+                .insert(&grantee.clone(), &grant_ids_grantee);
 
-                let mut grant_ids_data_id = self.grant_ids_by_data_id.get(&data_id.clone()).unwrap();
-                grant_ids_data_id.retain(|id| *id != grant_id);
-                self.grant_ids_by_data_id.insert(&data_id.clone(), &grant_ids_data_id);
-            });
+            let mut grant_ids_data_id = self.grant_ids_by_data_id.get(&data_id.clone()).unwrap();
+            grant_ids_data_id.retain(|id| *id != grant_id);
+            self.grant_ids_by_data_id
+                .insert(&data_id.clone(), &grant_ids_data_id);
+        });
     }
 
-    pub fn grants_for(
-        &self,
-        grantee: AccountId,
-        data_id: String
-    ) -> Vec<Grant> {
+    pub fn grants_for(&self, grantee: AccountId, data_id: String) -> Vec<Grant> {
         self.find_grants(None, Some(grantee), Some(data_id))
     }
 
@@ -137,20 +139,32 @@ impl FractalRegistry {
         &self,
         owner: Option<AccountId>,
         grantee: Option<AccountId>,
-        data_id: Option<String>
+        data_id: Option<String>,
     ) -> Vec<Grant> {
         let mut grant_id_searches = Vec::new();
 
         if let Some(owner) = owner {
-            grant_id_searches.push(self.grant_ids_by_owner.get(&owner.clone()).unwrap_or(vec!{}));
+            grant_id_searches.push(
+                self.grant_ids_by_owner
+                    .get(&owner.clone())
+                    .unwrap_or(vec![]),
+            );
         }
 
         if let Some(grantee) = grantee {
-            grant_id_searches.push(self.grant_ids_by_grantee.get(&grantee.clone()).unwrap_or(vec!{}));
+            grant_id_searches.push(
+                self.grant_ids_by_grantee
+                    .get(&grantee.clone())
+                    .unwrap_or(vec![]),
+            );
         }
 
         if let Some(data_id) = data_id {
-            grant_id_searches.push(self.grant_ids_by_data_id.get(&data_id.clone()).unwrap_or(vec!{}));
+            grant_id_searches.push(
+                self.grant_ids_by_data_id
+                    .get(&data_id.clone())
+                    .unwrap_or(vec![]),
+            );
         }
 
         grant_id_searches[0]
