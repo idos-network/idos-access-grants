@@ -1,4 +1,3 @@
-use hex;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
 use near_sdk::serde::Serialize;
@@ -110,7 +109,7 @@ impl FractalRegistry {
                 "Grant is timelocked"
             );
 
-            let grant_id = derive_grant_id(&grant);
+            let grant_id = derive_grant_id(grant);
 
             self.grants_by_id.remove(&grant_id);
 
@@ -144,33 +143,21 @@ impl FractalRegistry {
         let mut grant_id_searches = Vec::new();
 
         if let Some(owner) = owner {
-            grant_id_searches.push(
-                self.grant_ids_by_owner
-                    .get(&owner.clone())
-                    .unwrap_or(vec![]),
-            );
+            grant_id_searches.push(self.grant_ids_by_owner.get(&owner).unwrap_or(vec![]));
         }
 
         if let Some(grantee) = grantee {
-            grant_id_searches.push(
-                self.grant_ids_by_grantee
-                    .get(&grantee.clone())
-                    .unwrap_or(vec![]),
-            );
+            grant_id_searches.push(self.grant_ids_by_grantee.get(&grantee).unwrap_or(vec![]));
         }
 
         if let Some(data_id) = data_id {
-            grant_id_searches.push(
-                self.grant_ids_by_data_id
-                    .get(&data_id.clone())
-                    .unwrap_or(vec![]),
-            );
+            grant_id_searches.push(self.grant_ids_by_data_id.get(&data_id).unwrap_or(vec![]));
         }
 
         grant_id_searches[0]
             .iter()
             .filter(|id| grant_id_searches.iter().all(|s| s.contains(id)))
-            .map(|id| self.grants_by_id.get(&id).unwrap())
+            .map(|id| self.grants_by_id.get(id).unwrap())
             .collect()
     }
 }
