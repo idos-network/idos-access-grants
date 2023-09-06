@@ -58,6 +58,19 @@ fn push_at_the_end<K: BorshSerialize, V: BorshDeserialize + BorshSerialize + Clo
     collection.insert(key, &value_vec);
 }
 
+fn remove_values<
+    K: BorshSerialize,
+    V: BorshDeserialize + BorshSerialize + Clone + std::cmp::PartialEq<V>,
+>(
+    collection: &mut LookupMap<K, Vec<V>>,
+    key: &K,
+    value: &V,
+) {
+    let mut value_vec = collection.get(key).unwrap();
+    value_vec.retain(|id| *id != *value);
+    collection.insert(key, &value_vec);
+}
+
 #[near_bindgen]
 impl FractalRegistry {
     pub fn insert_grant(
@@ -114,20 +127,9 @@ impl FractalRegistry {
 
             self.grants_by_id.remove(&grant_id);
 
-            let mut grant_ids_owner = self.grant_ids_by_owner.get(&owner.clone()).unwrap();
-            grant_ids_owner.retain(|id| *id != grant_id);
-            self.grant_ids_by_owner
-                .insert(&owner.clone(), &grant_ids_owner);
-
-            let mut grant_ids_grantee = self.grant_ids_by_grantee.get(&grantee.clone()).unwrap();
-            grant_ids_grantee.retain(|id| *id != grant_id);
-            self.grant_ids_by_grantee
-                .insert(&grantee.clone(), &grant_ids_grantee);
-
-            let mut grant_ids_data_id = self.grant_ids_by_data_id.get(&data_id.clone()).unwrap();
-            grant_ids_data_id.retain(|id| *id != grant_id);
-            self.grant_ids_by_data_id
-                .insert(&data_id.clone(), &grant_ids_data_id);
+            remove_values(&mut self.grant_ids_by_owner, &owner, &grant_id);
+            remove_values(&mut self.grant_ids_by_grantee, &grantee, &grant_id);
+            remove_values(&mut self.grant_ids_by_data_id, &data_id, &grant_id);
         });
     }
 
