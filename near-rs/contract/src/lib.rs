@@ -52,6 +52,19 @@ impl Default for FractalRegistry {
     }
 }
 
+fn push_at_the_end<
+    K: BorshSerialize,
+    V: BorshDeserialize + BorshSerialize + Clone
+>(
+    collection: &mut LookupMap<K, Vec<V>>,
+    key: &K,
+    value: &V,
+) {
+    let mut value_vec = collection.get(key).unwrap_or(vec![]);
+    value_vec.push(value.clone());
+    collection.insert(key, &value_vec);
+}
+
 #[near_bindgen]
 impl FractalRegistry {
     pub fn insert_grant(
@@ -75,17 +88,9 @@ impl FractalRegistry {
 
         self.grants_by_id.insert(&grant_id, &grant);
 
-        let mut grant_ids_owner = self.grant_ids_by_owner.get(&owner).unwrap_or(vec!{});
-        grant_ids_owner.push(grant_id.clone());
-        self.grant_ids_by_owner.insert(&owner, &grant_ids_owner);
-
-        let mut grant_ids_grantee = self.grant_ids_by_grantee.get(&grantee).unwrap_or(vec!{});
-        grant_ids_grantee.push(grant_id.clone());
-        self.grant_ids_by_grantee.insert(&grantee, &grant_ids_grantee);
-
-        let mut grant_ids_data_id = self.grant_ids_by_data_id.get(&data_id).unwrap_or(vec!{});
-        grant_ids_data_id.push(grant_id.clone());
-        self.grant_ids_by_data_id.insert(&data_id, &grant_ids_data_id);
+        push_at_the_end(&mut self.grant_ids_by_owner, &owner, &grant_id);
+        push_at_the_end(&mut self.grant_ids_by_grantee, &grantee, &grant_id);
+        push_at_the_end(&mut self.grant_ids_by_data_id, &data_id, &grant_id);
     }
 
     pub fn delete_grant(
