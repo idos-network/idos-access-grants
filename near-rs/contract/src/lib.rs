@@ -156,14 +156,10 @@ impl FractalRegistry {
             grant_id_searches.push(self.grant_ids_by_data_id.get(&data_id).unwrap_or(vec![]));
         }
 
-        require!(
-            !grant_id_searches.is_empty(),
-            "You must provide some search criteria."
-        );
+        let Some((head, tail)) = grant_id_searches.split_first() else { panic!("You must provide some search criteria") };
 
-        grant_id_searches[0]
-            .iter()
-            .filter(|id| grant_id_searches[1..].iter().all(|s| s.contains(id)))
+        head.iter()
+            .filter(|id| tail.iter().all(|s| s.contains(id)))
             .map(|id| self.grants_by_id.get(id).unwrap())
             .collect()
     }
