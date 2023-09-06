@@ -5,10 +5,11 @@ use serde::Deserialize;
 use serde_json::json;
 use workspaces::{Account, Contract};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub struct Grant {
     grantee: String,
     data_id: String,
+    locked_until: u128,
 }
 
 #[tokio::main]
@@ -50,7 +51,8 @@ async fn test_everything(
         .view()
         .await?
         .json::<Vec<Grant>>().unwrap();
-    assert_eq!(grants.len(), 0);
+    assert_eq!(grants, vec![
+    ]);
 
     result = user
         .call(contract.id(), "insert_grant")
@@ -87,7 +89,11 @@ async fn test_everything(
         .view()
         .await?
         .json::<Vec<Grant>>().unwrap();
-    assert_eq!(grants.len(), 3);
+    assert_eq!(grants, vec![
+        Grant { grantee: "bob.near".into(), data_id: "A1".into(), locked_until: 0 },
+        Grant { grantee: "bob.near".into(), data_id: "A2".into(), locked_until: 0 },
+        Grant { grantee: "charlie.near".into(), data_id: "A2".into(), locked_until: 0 },
+    ]);
 
     grants = user
         .call(contract.id(), "find_grants")
@@ -95,7 +101,10 @@ async fn test_everything(
         .view()
         .await?
         .json::<Vec<Grant>>().unwrap();
-    assert_eq!(grants.len(), 2);
+    assert_eq!(grants, vec![
+        Grant { grantee: "bob.near".into(), data_id: "A1".into(), locked_until: 0 },
+        Grant { grantee: "bob.near".into(), data_id: "A2".into(), locked_until: 0 },
+    ]);
 
     grants = user
         .call(contract.id(), "find_grants")
@@ -103,7 +112,10 @@ async fn test_everything(
         .view()
         .await?
         .json::<Vec<Grant>>().unwrap();
-    assert_eq!(grants.len(), 2);
+    assert_eq!(grants, vec![
+        Grant { grantee: "bob.near".into(), data_id: "A1".into(), locked_until: 0 },
+        Grant { grantee: "bob.near".into(), data_id: "A2".into(), locked_until: 0 },
+    ]);
 
     grants = user
         .call(contract.id(), "find_grants")
@@ -111,7 +123,10 @@ async fn test_everything(
         .view()
         .await?
         .json::<Vec<Grant>>().unwrap();
-    assert_eq!(grants.len(), 2);
+    assert_eq!(grants, vec![
+        Grant { grantee: "bob.near".into(), data_id: "A2".into(), locked_until: 0 },
+        Grant { grantee: "charlie.near".into(), data_id: "A2".into(), locked_until: 0 },
+    ]);
 
     grants = user
         .call(contract.id(), "find_grants")
@@ -119,7 +134,9 @@ async fn test_everything(
         .view()
         .await?
         .json::<Vec<Grant>>().unwrap();
-    assert_eq!(grants.len(), 1);
+    assert_eq!(grants, vec![
+        Grant { grantee: "bob.near".into(), data_id: "A1".into(), locked_until: 0 },
+    ]);
 
     grants = user
         .call(contract.id(), "find_grants")
@@ -127,7 +144,8 @@ async fn test_everything(
         .view()
         .await?
         .json::<Vec<Grant>>().unwrap();
-    assert_eq!(grants.len(), 0);
+    assert_eq!(grants, vec![
+    ]);
 
     result = user
         .call(contract.id(), "delete_grant")
@@ -142,7 +160,9 @@ async fn test_everything(
         .view()
         .await?
         .json::<Vec<Grant>>().unwrap();
-    assert_eq!(grants.len(), 1);
+    assert_eq!(grants, vec![
+        Grant { grantee: "bob.near".into(), data_id: "A2".into(), locked_until: 0 },
+    ]);
 
     grants = user
         .call(contract.id(), "find_grants")
@@ -150,7 +170,8 @@ async fn test_everything(
         .view()
         .await?
         .json::<Vec<Grant>>().unwrap();
-    assert_eq!(grants.len(), 0);
+    assert_eq!(grants, vec![
+    ]);
 
     grants = user
         .call(contract.id(), "find_grants")
@@ -158,7 +179,10 @@ async fn test_everything(
         .view()
         .await?
         .json::<Vec<Grant>>().unwrap();
-    assert_eq!(grants.len(), 2);
+    assert_eq!(grants, vec![
+        Grant { grantee: "bob.near".into(), data_id: "A2".into(), locked_until: 0 },
+        Grant { grantee: "charlie.near".into(), data_id: "A2".into(), locked_until: 0 },
+    ]);
 
     let in_the_future = (SystemTime::now().duration_since(UNIX_EPOCH)? + Duration::from_secs(3600)).as_nanos();
     let in_the_past = (SystemTime::now().duration_since(UNIX_EPOCH)? - Duration::from_secs(3600)).as_nanos();
@@ -200,7 +224,8 @@ async fn test_everything(
         .view()
         .await?
         .json::<Vec<Grant>>().unwrap();
-    assert_eq!(grants.len(), 0);
+    assert_eq!(grants, vec![
+    ]);
 
     result = user
         .call(contract.id(), "insert_grant")
@@ -236,7 +261,10 @@ async fn test_everything(
         .view()
         .await?
         .json::<Vec<Grant>>().unwrap();
-    assert_eq!(grants.len(), 2);
+    assert_eq!(grants, vec![
+        Grant { grantee: "eve.near".into(), data_id: "A3".into(), locked_until: in_the_paster },
+        Grant { grantee: "eve.near".into(), data_id: "A3".into(), locked_until: in_the_pastest },
+    ]);
 
     result = user
         .call(contract.id(), "delete_grant")
@@ -251,7 +279,8 @@ async fn test_everything(
         .view()
         .await?
         .json::<Vec<Grant>>().unwrap();
-    assert_eq!(grants.len(), 0);
+    assert_eq!(grants, vec![
+    ]);
 
     println!("      Passed ✅ test_everything");
     Ok(())
