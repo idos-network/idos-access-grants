@@ -70,6 +70,16 @@ impl <'a> ContractConnection<'_> {
     }
 }
 
+trait FallibleResult {
+    fn fails_with(&self, message: &str) -> bool;
+}
+
+impl FallibleResult for ExecutionFinalResult {
+    fn fails_with(&self, message: &str) -> bool {
+        self.is_failure() && self.clone().into_result().unwrap_err().to_string().contains(message)
+    }
+}
+
 async fn test_everything(
     user: &Account,
     contract: &Contract,
@@ -100,8 +110,7 @@ async fn test_everything(
         "grantee": "bob.near",
         "data_id": "A1",
     })).await?;
-    assert!(result.is_failure());
-    assert!(result.into_result().unwrap_err().to_string().contains("Grant already exists"));
+    assert!(result.fails_with("Grant already exists"));
 
     result = connection.insert_grant(json!({
         "grantee": "bob.near",
@@ -187,8 +196,7 @@ async fn test_everything(
         "grantee": "dave.near",
         "data_id": "A2",
     })).await?;
-    assert!(result.is_failure());
-    assert!(result.into_result().unwrap_err().to_string().contains("Grant is timelocked"));
+    assert!(result.fails_with("Grant is timelocked"));
 
     result = connection.insert_grant(json!({
         "grantee": "eve.near",
