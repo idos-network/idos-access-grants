@@ -26,7 +26,7 @@ class Grant {
 }
 
 @NearBindgen({})
-class AccessGrants {
+export class AccessGrants {
   grantsById: LookupMap<Grant>;
 
   grantIdsByOwner: LookupMap<string[]>;
