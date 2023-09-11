@@ -92,7 +92,7 @@ contract AccessGrants {
             candidateGrantIds = _grantIdsByGrantee[grantee].values();
             candidateGrantCount = _grantIdsByGrantee[grantee].length();
         } else {
-            revert("Neither owner nor grantee provided");
+            revert("You must provide some search criteria");
         }
 
         uint256 returnCount = 0;
