@@ -96,7 +96,9 @@ contract AccessGrants {
             candidateGrantIds = _grantIdsByGrantee[grantee].values();
             candidateGrantCount = _grantIdsByGrantee[grantee].length();
         } else {
-            revert("Neither owner nor grantee provided");
+            // REVIEWME This is not the same as other implementations. Namely, this one doesn't allow for
+            // (None, None, Some(data_id)). Is that on purpose, or accidental design?
+            revert("You must provide some search criteria");
         }
 
         uint256 returnCount = 0;
