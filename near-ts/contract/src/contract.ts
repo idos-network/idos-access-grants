@@ -158,7 +158,10 @@ class AccessGrants {
     grant: Grant
   }): string {
     const { owner, grantee, dataId, lockedUntil } = grant;
-    
+
+    // REVIEWME I think it'd be wise to check (i.e., write a test for it) that all implementation reach the same
+    // grantId value for the same inputs, given the function's supposedly pure. I think it'll be pretty surprising if
+    // we don't hold that guarantee.
     const grantId = decode(
       near.keccak256(
         encode(owner + grantee + dataId + lockedUntil),
