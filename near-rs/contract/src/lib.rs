@@ -48,7 +48,7 @@ impl Default for FractalRegistry {
     }
 }
 
-fn push_at_the_end<K: BorshSerialize, V: BorshDeserialize + BorshSerialize + Clone>(
+fn get_push_insert<K: BorshSerialize, V: BorshDeserialize + BorshSerialize + Clone>(
     collection: &mut LookupMap<K, Vec<V>>,
     key: &K,
     value: &V,
@@ -97,9 +97,9 @@ impl FractalRegistry {
 
         self.grants_by_id.insert(&grant_id, &grant);
 
-        push_at_the_end(&mut self.grant_ids_by_owner, &owner, &grant_id);
-        push_at_the_end(&mut self.grant_ids_by_grantee, &grantee, &grant_id);
-        push_at_the_end(&mut self.grant_ids_by_data_id, &data_id, &grant_id);
+        get_push_insert(&mut self.grant_ids_by_owner, &owner, &grant_id);
+        get_push_insert(&mut self.grant_ids_by_grantee, &grantee, &grant_id);
+        get_push_insert(&mut self.grant_ids_by_data_id, &data_id, &grant_id);
     }
 
     pub fn delete_grant(
