@@ -141,10 +141,13 @@ export class AccessGrants {
       this.grantIdsByOwner.get(owner),
       this.grantIdsByGrantee.get(grantee),
       this.grantIdsByDataId.get(dataId),
-    ];
+    ].filter(Array.isArray);
+
+    if (grantIdSearches.length == 0) {
+      throw new Error("You must provide some search criteria")
+    }
 
     const grants = grantIdSearches
-      .filter(Array.isArray)
       .reduce((acc, val) => (acc.filter((id) => (val.includes(id)))))
       .map((id) => (this.grantsById.get(id)));
 
