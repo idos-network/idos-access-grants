@@ -19,6 +19,7 @@ contract AccessGrants {
     mapping(address => EnumerableSet.Bytes32Set) private _grantIdsByGrantee;
     mapping(string => EnumerableSet.Bytes32Set) private _grantIdsByDataId;
 
+    // CURIOSITY Why not the empty string?
     bytes32 private constant _WILDCARD_DATA_ID = keccak256(abi.encodePacked("0"));
 
     constructor() {}
