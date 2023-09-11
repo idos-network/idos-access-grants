@@ -72,7 +72,7 @@ class AccessGrants {
     );
     this.grantIdsByDataId.set(
       dataId,
-      (this.grantIdsByDataId.get(grantee) || []).concat(grantId),
+      (this.grantIdsByDataId.get(dataId) || []).concat(grantId),
     );
   }
 
