@@ -109,7 +109,7 @@ class AccessGrants {
         );
         this.grantIdsByDataId.set(
           dataId,
-          (this.grantIdsByDataId.get(grantee) || []).filter((id) => (id !== grantId)),
+          (this.grantIdsByDataId.get(dataId) || []).filter((id) => (id !== grantId)),
         );
       }
     });
