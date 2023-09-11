@@ -161,6 +161,7 @@ impl FractalRegistry {
         }
 
         if let Some(data_id) = data_id {
+            // REVIEWME What about the "0" value? Shouldn't we keep parity between implementations?
             grant_id_searches.push(self.grant_ids_by_data_id.get(&data_id).unwrap_or(vec![]));
         }
 

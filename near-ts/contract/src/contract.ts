@@ -140,6 +140,7 @@ export class AccessGrants {
     const grantIdSearches = [
       this.grantIdsByOwner.get(owner),
       this.grantIdsByGrantee.get(grantee),
+      // REVIEWME What about the "0" value? Shouldn't we keep parity between implementations?
       this.grantIdsByDataId.get(dataId),
     ];
 
