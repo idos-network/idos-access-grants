@@ -48,7 +48,6 @@ contract AccessGrants {
     function deleteGrant(
         address grantee,
         string memory dataId,
-        // UNEVIDENT why do we require the caller to know the timelock?
         uint256 lockedUntil
     ) external {
         Grant[] memory grants = findGrants(msg.sender, grantee, dataId);
