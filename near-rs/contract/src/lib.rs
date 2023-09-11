@@ -116,7 +116,14 @@ impl FractalRegistry {
             Some(data_id.clone()),
         )
         .iter()
-        .filter(|grant| [0, grant.locked_until].contains(&locked_until.unwrap_or(0)))
+        .filter(|grant| {
+            //REVIEWME This was the intention, right?
+            match locked_until {
+                None => true,
+                Some(0) => true,
+                Some(locked_until_) => grant.locked_until == locked_until_,
+            }
+        })
         .for_each(|grant| {
             require!(
                 grant.locked_until < env::block_timestamp(),
