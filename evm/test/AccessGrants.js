@@ -7,7 +7,7 @@ const NO_TIMELOCK = 0n;
 
 describe("AccessGrants", function () {
   async function deployAndPopulateContractFixture() {
-    const [, signer1, signer2, signer3, signer4] = await ethers.getSigners();
+    const [_, signer1, signer2, signer3, signer4] = await ethers.getSigners();
 
     const AccessGrants = await ethers.getContractFactory("AccessGrants");
     const accessGrants = await AccessGrants.deploy();
