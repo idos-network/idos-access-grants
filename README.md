@@ -19,16 +19,20 @@ The contract functionality is straightforward:
 
 | Target VM | Language | Source |
 | :- | :- | :- |
-| EVM | Solidity | [evm](evm) |
-| NEAR VM | Rust | [near-rs](near-rs) |
-| NEAR VM | TypeScript | [near-ts](near-ts) |
+| EVM | Solidity | [`evm/`](./evm) |
+| NEAR VM | Rust | [`near-rs/`](./near-rs) |
+| NEAR VM | TypeScript | [`near-ts/`](./near-ts) |
 
 **Deployments:**
 
-| Chain | Address |
-| :- | :- |
-| Goerli | [`0xdffd3319bb0978ea656da41bb8728ee163aa33f2`](https://goerli.etherscan.io/address/0xdffd3319bb0978ea656da41bb8728ee163aa33f2#code) |
-| NEAR Testnet | [`dev-20230822145635-43013572991135`](https://explorer.testnet.near.org/accounts/dev-20230822145635-43013572991135) |
+| Source | Chain | Address |
+| :- | :- | :- |
+| `evm/` | Goerli | [`0x5b7d9b546B34ceD8AE0A26b090E0fDbB70e7224f`](https://goerli.etherscan.io/address/0x5b7d9b546B34ceD8AE0A26b090E0fDbB70e7224f#code) |
+| `evm/` | Sepolia | [`0x032b8275B13D3aEef180d13e29287535aCB667Ef`](https://sepolia.etherscan.io/address/0x032b8275B13D3aEef180d13e29287535aCB667Ef#code) |
+| `near-rs/` | NEAR Testnet | [`idos-dev-2.testnet`](https://explorer.testnet.near.org/accounts/idos-dev-2.testnet) | 
+| `near-rs/` | NEAR Mainnet | [`idos-dev-2.near`](https://explorer.mainnet.near.org/accounts/idos-dev-2.near) |
+| `near-ts/` | NEAR Testnet | [`idos-dev-1.testnet`](https://explorer.testnet.near.org/accounts/idos-dev-1.testnet) |
+| `near-ts/` | NEAR Mainnet | [`idos-dev-1.near`](https://explorer.mainnet.near.org/accounts/idos-dev-1.near) |
 
 ## Interface
 

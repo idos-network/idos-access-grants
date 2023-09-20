@@ -10,4 +10,8 @@ fi
 echo ">> Deploying contract"
 
 # https://docs.near.org/tools/near-cli#near-dev-deploy
-near dev-deploy --wasmFile build/access_grants.wasm
+#near dev-deploy --wasmFile build/access_grants.wasm --accountId
+
+#NEAR_ENV=testnet near deploy --wasmFile build/access_grants.wasm --accountId idos-dev-1.testnet
+
+NEAR_ENV=mainnet near deploy --wasmFile build/access_grants.wasm --accountId idos-dev-1.near

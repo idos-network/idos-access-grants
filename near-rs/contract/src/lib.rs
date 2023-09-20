@@ -1,3 +1,4 @@
+extern crate near_sdk;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
 use near_sdk::serde::Serialize;
