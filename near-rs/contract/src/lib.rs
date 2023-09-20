@@ -115,12 +115,10 @@ impl FractalRegistry {
             Some(data_id.clone()),
         )
         .iter()
-        .filter(|grant| {
-            match locked_until {
-                None => true,
-                Some(0) => true,
-                Some(locked_until_) => grant.locked_until == locked_until_,
-            }
+        .filter(|grant| match locked_until {
+            None => true,
+            Some(0) => true,
+            Some(locked_until_) => grant.locked_until == locked_until_,
         })
         .for_each(|grant| {
             require!(
@@ -150,6 +148,11 @@ impl FractalRegistry {
     ) -> Vec<Grant> {
         let mut grant_id_searches = Vec::new();
 
+        require!(
+            owner.is_some() || grantee.is_some(),
+            "Required argument: `owner` and/or `grantee`",
+        );
+
         if let Some(owner) = owner {
             grant_id_searches.push(self.grant_ids_by_owner.get(&owner).unwrap_or(vec![]));
         }
@@ -162,7 +165,7 @@ impl FractalRegistry {
             grant_id_searches.push(self.grant_ids_by_data_id.get(&data_id).unwrap_or(vec![]));
         }
 
-        let Some((head, tail)) = grant_id_searches.split_first() else { panic!("You must provide some search criteria") };
+        let Some((head, tail)) = grant_id_searches.split_first() else { return vec![] };
 
         head.iter()
             .filter(|id| tail.iter().all(|s| s.contains(id)))

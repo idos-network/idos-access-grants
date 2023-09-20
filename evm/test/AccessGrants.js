@@ -228,7 +228,7 @@ describe("AccessGrants", function () {
 
               await expect(
                 accessGrants.findGrants(WILDCARD_ADDRESS, WILDCARD_ADDRESS, "some ID")
-              ).to.be.revertedWith("You must provide some search criteria");
+              ).to.be.revertedWith("Required argument: `owner` and/or `grantee`");
             });
 
             describe("Given owner", async function () {

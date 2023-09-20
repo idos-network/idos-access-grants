@@ -125,6 +125,13 @@ test("everything", async (t) => {
     { owner: "test.near", grantee: "dave.near", dataId: "99", lockedUntil: "0" },
   ]);
 
+  await t.throwsAsync(() => (
+    contract.view("find_grants", {
+      dataId: "99",
+    })
+  ), {message: /Required argument: `owner` and\/or `grantee`/});
+
+
   /*
    * Timelock expired
    */

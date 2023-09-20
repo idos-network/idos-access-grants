@@ -382,6 +382,15 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
         .unwrap();
     assert_eq!(grants, vec![]);
 
+    assert!(user
+        .call(contract.id(), "find_grants")
+        .args_json(json!({"data_id": "A2"}))
+        .view()
+        .await
+        .unwrap_err()
+        .to_string()
+        .contains("Required argument: `owner` and/or `grantee`"));
+
     println!("      Passed ✅ test_everything");
     Ok(())
 }
