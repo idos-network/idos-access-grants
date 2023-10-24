@@ -1,15 +1,15 @@
 {
-  "name": "near-js",
+  "name": "near-ts",
   "version": "1.0.0",
   "license": "(MIT AND Apache-2.0)",
   "scripts": {
-    "deploy": "cd contract && npm run deploy",
-    "build": "npm run build:contract",
-    "build:contract": "cd contract && npm run build",
-    "test": "npm run test:unit && npm run test:integration",
-    "test:unit": "cd contract && npm test",
-    "test:integration": "npm run build:contract && cd integration-tests && npm test -- -- \"./contract/build/access_grants.wasm\"",
-    "postinstall": "echo no frontend && cd integration-tests && npm install && cd .. && cd contract && npm install"
+    "deploy": "cd contract && yarn deploy",
+    "build": "yarn build:contract",
+    "build:contract": "cd contract && yarn build",
+    "test": "yarn test:unit && yarn test:integration",
+    "test:unit": "cd contract && yarn test",
+    "test:integration": "yarn build:contract && cd integration-tests && yarn test -- -- \"../contract/build/access_grants.wasm\"",
+    "postinstall": "echo no frontend && cd integration-tests && yarn && cd .. && cd contract && yarn"
   },
   "devDependencies": {
     "near-cli": "^3.3.0"
