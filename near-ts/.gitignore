@@ -17,7 +17,6 @@ node_modules
 
 # production
 /build
-/contract/build
 
 # misc
 .DS_Store
@@ -30,5 +29,3 @@ node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-neardev
