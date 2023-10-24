@@ -92,10 +92,10 @@ Deletes an existing access grant.
 
 - if given `lockedUntil`
     - deletes `Grant(signer, grantee, dataId, lockedUntil)`
-    - reverts if `lockedUntil` is in the past
+    - reverts if `lockedUntil` is in the future
 - else
     - deletes all `Grant(signer, grantee, dataId, *)`
-    - reverts if any `lockedUntil` is in the past
+    - reverts if any `lockedUntil` is in the future
 
 </details>
 
