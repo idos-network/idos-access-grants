@@ -1,0 +1,68 @@
+name: "Test"
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  evm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .node-version
+          cache: yarn
+          cache-dependency-path: evm/yarn.lock
+
+      - name: Test
+        run: |
+          cd evm
+          yarn
+          yarn test
+
+  near-rs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .node-version
+
+      - run: rustup toolchain install stable --profile minimal
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: >
+            near-rs/contract
+            near-rs/integration-tests
+
+      - name: Test
+        run: |
+          cd near-rs
+          yarn
+          yarn test
+
+  near-ts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .node-version
+          cache: yarn
+          cache-dependency-path: near-ts/contract/yarn.lock
+
+      - name: Test
+        run: |
+          cd near-rs
+          yarn
+          yarn test
