@@ -1,6 +1,6 @@
 tasks:
-  - init: npm dev
-    command: npm run dev
+  - init: yarn dev
+    command: yarn dev
 ports:
   - port: 1234
     onOpen: open-browser
