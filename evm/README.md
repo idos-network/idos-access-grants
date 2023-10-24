@@ -6,7 +6,7 @@
 ## Testing
 
 ```
-$ npx hardhat test
+$ yarn test
 ```
 
 ## Local deployment
