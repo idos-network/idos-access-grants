@@ -6,7 +6,7 @@ edition = "2018"
 
 [dev-dependencies]
 anyhow = "1.0"
-borsh = "0.9"
+borsh = "1.0"
 maplit = "1.0"
 near-units = "0.2.0"
 # arbitrary_precision enabled for u128 types that workspaces requires for Balance types
