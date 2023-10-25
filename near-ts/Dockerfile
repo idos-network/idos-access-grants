@@ -1,6 +1,6 @@
 FROM debian
 
-RUN apt update && apt install -y \
+RUN apt update && apt install --no-install-recommends -y \
     curl \
     jq \
     npm \
@@ -13,3 +13,5 @@ RUN adduser runner && adduser runner sudo && mkdir ~runner/code
 WORKDIR /home/runner/code
 
 COPY . .
+
+RUN yarn
