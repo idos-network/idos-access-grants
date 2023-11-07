@@ -5,7 +5,7 @@ use std::{
 
 use serde::Deserialize;
 use serde_json::json;
-use workspaces::{Account, Contract};
+use workspaces::{types::SecretKey, Account, Contract};
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Grant {
@@ -15,20 +15,17 @@ pub struct Grant {
     locked_until: u128,
 }
 
-async fn create_subaccount(new_account_id: &str, account: &Account) -> anyhow::Result<Account> {
-    Ok(account
-        .create_subaccount(new_account_id)
-        .transact()
-        .await?
-        .into_result()?)
+fn extract_public_key(secret_key: &SecretKey) -> String {
+    // FIXME: What's the right way to serialize this without the '"'s?
+    serde_json::to_string(&secret_key.public_key())
+        .unwrap()
+        .replace("\"", "")
 }
 
-fn extract_id(account: &Account) -> String {
-    account.id().clone().into()
-}
-
-async fn create_id(new_account_id: &str, account: &Account) -> anyhow::Result<String> {
-    Ok(extract_id(&create_subaccount(new_account_id, account).await?))
+async fn create_public_key() -> anyhow::Result<String> {
+    Ok(extract_public_key(&SecretKey::from_random(
+        workspaces::types::KeyType::ED25519,
+    )))
 }
 
 #[tokio::main]
@@ -41,17 +38,23 @@ async fn main() -> anyhow::Result<()> {
     let contract = worker.dev_deploy(&wasm).await?;
 
     // create accounts
-    let account = worker.dev_create_account().await?;
-    let test_account = create_subaccount("test", &account).await?;
+    let test_account = worker
+        .dev_create_account()
+        .await?
+        .create_subaccount("test")
+        .transact()
+        .await?
+        .into_result()?;
+
     // begin tests
     test_everything(
         &contract,
         &test_account,
-        &extract_id(&test_account),
-        &create_id("bob", &account).await?,
-        &create_id("charlie", &account).await?,
-        &create_id("dave", &account).await?,
-        &create_id("eve", &account).await?,
+        &extract_public_key(&test_account.secret_key()),
+        &create_public_key().await?,
+        &create_public_key().await?,
+        &create_public_key().await?,
+        &create_public_key().await?,
     )
     .await?;
 
@@ -110,7 +113,11 @@ async fn test_everything(
         .args_json(json!({"grantee": charlie, "data_id": "A2"}))
         .transact()
         .await?;
-    assert!(result.is_success());
+    assert!(
+        result.is_success(),
+        "{}",
+        result.into_result().unwrap_err().to_string()
+    );
 
     grants = test_account
         .call(contract.id(), "find_grants")
