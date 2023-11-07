@@ -14,5 +14,7 @@
   "devDependencies": {
     "near-cli": "^3.3.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@scure/base": "^1.1.3"
+  }
 }
