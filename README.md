@@ -27,8 +27,9 @@ The contract functionality is straightforward:
 
 | Source | Chain | Address |
 | :- | :- | :- |
-| `evm/` | Goerli | [`0x5b7d9b546B34ceD8AE0A26b090E0fDbB70e7224f`](https://goerli.etherscan.io/address/0x5b7d9b546B34ceD8AE0A26b090E0fDbB70e7224f#code) |
 | `evm/` | Sepolia | [`0x032b8275B13D3aEef180d13e29287535aCB667Ef`](https://sepolia.etherscan.io/address/0x032b8275B13D3aEef180d13e29287535aCB667Ef#code) |
+| `evm/` | Sepolia | [`0x4D91c98056073067e3A9acbc2D2b40c4d8241cA9`](https://sepolia.etherscan.io/address/0x4D91c98056073067e3A9acbc2D2b40c4d8241cA9#code) |
+| `evm/` | Sepolia | [`0xDde8d7c20839F788182C139f02147B741a20F8bf`](https://sepolia.etherscan.io/address/0xDde8d7c20839F788182C139f02147B741a20F8bf#code) |
 | `near-rs/` | NEAR Testnet | [`idos-dev-2.testnet`](https://explorer.testnet.near.org/accounts/idos-dev-2.testnet) | 
 | `near-rs/` | NEAR Mainnet | [`idos-dev-2.near`](https://explorer.mainnet.near.org/accounts/idos-dev-2.near) |
 | `near-ts/` | NEAR Testnet | [`idos-dev-1.testnet`](https://explorer.testnet.near.org/accounts/idos-dev-1.testnet) |
