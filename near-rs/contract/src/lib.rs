@@ -2,7 +2,6 @@ extern crate near_sdk;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
 use near_sdk::serde::Serialize;
-use near_sdk::serde_json::to_string;
 use near_sdk::{env, near_bindgen, require, EpochHeight, PublicKey};
 
 #[near_bindgen]
@@ -26,9 +25,9 @@ pub struct Grant {
 
 pub fn derive_grant_id(grant: &Grant) -> String {
     let id = format!(
-        "{}{}{}{}",
-        to_string(&grant.owner).unwrap(),
-        to_string(&grant.grantee).unwrap(),
+        "{:?}{:?}{}{}",
+        &grant.owner,
+        &grant.grantee,
         grant.data_id,
         grant.locked_until,
     );
