@@ -3,9 +3,9 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
+use near_workspaces::{types::SecretKey, Account, Contract};
 use serde::Deserialize;
 use serde_json::json;
-use near_workspaces::{types::SecretKey, Account, Contract};
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Grant {
@@ -426,14 +426,15 @@ async fn test_everything(
         .unwrap();
     assert_eq!(grants, vec![]);
 
-    assert!(
-        format!("{:?}", test_account
+    assert!(format!(
+        "{:?}",
+        test_account
             .view(contract.id(), "find_grants")
             .args_json(json!({"data_id": "A2"}))
             .await
             .expect_err("find_grants should have panicked")
-        ).contains("Required argument: `owner` and/or `grantee`")
-    );
+    )
+    .contains("Required argument: `owner` and/or `grantee`"));
 
     println!("      Passed ✅ test_everything");
     Ok(())

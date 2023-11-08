@@ -41,10 +41,7 @@ fn derive_grant_id_example() {
 pub fn derive_grant_id(grant: &Grant) -> String {
     let id = format!(
         "{:?}{:?}{}{}",
-        &grant.owner,
-        &grant.grantee,
-        grant.data_id,
-        grant.locked_until,
+        &grant.owner, &grant.grantee, grant.data_id, grant.locked_until,
     );
 
     hex::encode(env::keccak256(id.as_bytes()))
@@ -184,7 +181,9 @@ impl FractalRegistry {
             grant_id_searches.push(self.grant_ids_by_data_id.get(&data_id).unwrap_or(vec![]));
         }
 
-        let Some((head, tail)) = grant_id_searches.split_first() else { return vec![] };
+        let Some((head, tail)) = grant_id_searches.split_first() else {
+            return vec![];
+        };
 
         head.iter()
             .filter(|id| tail.iter().all(|s| s.contains(id)))
