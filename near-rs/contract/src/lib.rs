@@ -23,6 +23,21 @@ pub struct Grant {
     locked_until: EpochHeight,
 }
 
+#[cfg(test)]
+#[test]
+fn derive_grant_id_example() {
+    // Just to make sure we don't accidentally change the way we derive grant_ids.
+    assert_eq!(
+        "76191fb1c82d02aba62433cec21abb5a5ee93eb713736bc32abf802f46c3b17d",
+        derive_grant_id(&Grant{
+            owner: "ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp".parse().unwrap(),
+            grantee: "secp256k1:qMoRgcoXai4mBPsdbHi1wfyxF9TdbPCF4qSDQTRP3TfescSRoUdSx6nmeQoN3aiwGzwMyGXAb1gUjBTv5AY8DXj".parse().unwrap(),
+            data_id: "some data".into(),
+            locked_until: 1337,
+        })
+    )
+}
+
 pub fn derive_grant_id(grant: &Grant) -> String {
     let id = format!(
         "{:?}{:?}{}{}",
