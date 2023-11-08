@@ -41,7 +41,7 @@ fn derive_grant_id_example() {
 pub fn derive_grant_id(grant: &Grant) -> String {
     let id = format!(
         "{:?}{:?}{}{}",
-        &grant.owner, &grant.grantee, grant.data_id, grant.locked_until,
+        grant.owner, grant.grantee, grant.data_id, grant.locked_until,
     );
 
     hex::encode(env::keccak256(id.as_bytes()))
