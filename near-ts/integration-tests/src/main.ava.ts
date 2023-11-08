@@ -1,9 +1,11 @@
 import { Worker, NearAccount, TransactionResult } from "near-workspaces";
 import anyTest, { TestFn } from "ava";
+import { PublicKey, PublicKeyString } from "../../contract/src/public_key";
 
 const test = anyTest as TestFn<{
   worker: Worker;
   accounts: Record<string, NearAccount>;
+  publicKeys: Record<string, PublicKeyString>;
 }>;
 
 test.beforeEach(async (t) => {
@@ -21,6 +23,16 @@ test.beforeEach(async (t) => {
   // Save state for test runs, it is unique for each test
   t.context.worker = worker;
   t.context.accounts = { root, contract };
+
+  for(const name of ["bob", "charlie", "dave", "eve"]){
+    t.context.accounts[name] = await worker.rootAccount.createSubAccount(name)
+  }
+
+  t.context.publicKeys = {}
+  for(const [name, account] of Object.entries(t.context.accounts)){
+    t.context.publicKeys[name] = ((await account.getKey())!.getPublicKey()! as unknown as PublicKey).toString()
+  }
+
 });
 
 test.afterEach.always(async (t) => {
@@ -31,98 +43,99 @@ test.afterEach.always(async (t) => {
 });
 
 test("everything", async (t) => {
-  const { root, contract } = t.context.accounts;
+  const { root: testAccount, contract } = t.context.accounts;
+  const { bob, charlie, dave, root: test, eve } = t.context.publicKeys;
   let transactionResult: TransactionResult;
 
-  await root.call(contract, "insert_grant", {
-    grantee: "bob.near",
+  await testAccount.call(contract, "insert_grant", {
+    grantee: bob,
     dataId: "42",
   });
 
-  transactionResult = await root.callRaw(contract, "insert_grant", {
-    grantee: "bob.near",
+  transactionResult = await testAccount.callRaw(contract, "insert_grant", {
+    grantee: bob,
     dataId: "42",
   });
 
   t.assert(transactionResult.failed);
   t.assert(transactionResult.receiptFailureMessagesContain("Grant already exists"));
 
-  await root.call(contract, "insert_grant", {
-    grantee: "bob.near",
+  await testAccount.call(contract, "insert_grant", {
+    grantee: bob,
     dataId: "90",
   });
 
-  await root.call(contract, "insert_grant", {
-    grantee: "charlie.near",
+  await testAccount.call(contract, "insert_grant", {
+    grantee: charlie,
     dataId: "99",
   });
 
-  await root.call(contract, "insert_grant", {
-    grantee: "dave.near",
+  await testAccount.call(contract, "insert_grant", {
+    grantee: dave,
     dataId: "99",
   });
 
   const grants_for:Array<Object> = await contract.view("grants_for", {
-    grantee: "bob.near",
+    grantee: bob,
     dataId: "90",
   });
 
   t.deepEqual(grants_for, [
-    { owner: "test.near", grantee: "bob.near", dataId: "90", lockedUntil: "0" },
+    { owner: test, grantee: bob, dataId: "90", lockedUntil: "0" },
   ]);
 
   let foundGrants:Array<Object>;
 
   foundGrants = await contract.view("find_grants", {
-    grantee: "charlie.near",
+    grantee: charlie,
     dataId: "90",
   });
 
   t.deepEqual(foundGrants, []);
 
   foundGrants = await contract.view("find_grants", {
-    grantee: "charlie.near",
+    grantee: charlie,
     dataId: "99",
   });
 
   t.deepEqual(foundGrants, [
-    { owner: "test.near", grantee: "charlie.near", dataId: "99", lockedUntil: "0" },
+    { owner: test, grantee: charlie, dataId: "99", lockedUntil: "0" },
   ]);
 
   foundGrants = await contract.view("find_grants", {
-    owner: "test.near",
+    owner: test,
   });
 
   t.deepEqual(foundGrants, [
-    { owner: "test.near", grantee: "bob.near", dataId: "42", lockedUntil: "0" },
-    { owner: "test.near", grantee: "bob.near", dataId: "90", lockedUntil: "0" },
-    { owner: "test.near", grantee: "charlie.near", dataId: "99", lockedUntil: "0" },
-    { owner: "test.near", grantee: "dave.near", dataId: "99", lockedUntil: "0" },
+    { owner: test, grantee: bob, dataId: "42", lockedUntil: "0" },
+    { owner: test, grantee: bob, dataId: "90", lockedUntil: "0" },
+    { owner: test, grantee: charlie, dataId: "99", lockedUntil: "0" },
+    { owner: test, grantee: dave, dataId: "99", lockedUntil: "0" },
   ]);
 
 
-  await root.call(contract, "delete_grant", {
-    grantee: "charlie.near",
+  await testAccount.call(contract, "delete_grant", {
+    grantee: charlie,
     dataId: "99",
   });
 
   foundGrants = await contract.view("find_grants", {
-    owner: "test.near",
+    owner: test,
   });
 
   t.deepEqual(foundGrants, [
-    { owner: "test.near", grantee: "bob.near", dataId: "42", lockedUntil: "0" },
-    { owner: "test.near", grantee: "bob.near", dataId: "90", lockedUntil: "0" },
-    { owner: "test.near", grantee: "dave.near", dataId: "99", lockedUntil: "0" },
+    { owner: test, grantee: bob, dataId: "42", lockedUntil: "0" },
+    { owner: test, grantee: bob, dataId: "90", lockedUntil: "0" },
+    { owner: test, grantee: dave, dataId: "99", lockedUntil: "0" },
   ]);
 
   foundGrants = await contract.view("find_grants", {
-    owner: "test.near",
+    owner: test,
     dataId: "99",
   });
 
   t.deepEqual(foundGrants, [
-    { owner: "test.near", grantee: "dave.near", dataId: "99", lockedUntil: "0" },
+    { owner: test, grantee: dave, dataId: "99", lockedUntil: "0" },
   ]);
 
   await t.throwsAsync(() => (
@@ -138,14 +151,14 @@ test("everything", async (t) => {
 
   let lockedUntil = (Date.now() - 24*60*60*1000) * 1e6;
 
-  await root.call(contract, "insert_grant", {
-    grantee: "eve.near",
+  await testAccount.call(contract, "insert_grant", {
+    grantee: eve,
     dataId: "99",
     lockedUntil: lockedUntil,
   });
 
-  transactionResult = await root.callRaw(contract, "delete_grant", {
-    grantee: "eve.near",
+  transactionResult = await testAccount.callRaw(contract, "delete_grant", {
+    grantee: eve,
     dataId: "99",
     lockedUntil: lockedUntil,
   });
@@ -153,32 +166,32 @@ test("everything", async (t) => {
   t.assert(transactionResult.succeeded);
 
   foundGrants = await contract.view("find_grants", {
-    grantee: "eve.near",
+    grantee: eve,
   });
 
   t.assert(foundGrants.length == 0);
 
-  await root.call(contract, "insert_grant", {
-    grantee: "eve.near",
+  await testAccount.call(contract, "insert_grant", {
+    grantee: eve,
     dataId: "99",
     lockedUntil: lockedUntil,
   });
 
-  transactionResult = await root.callRaw(contract, "delete_grant", {
-    grantee: "eve.near",
+  transactionResult = await testAccount.callRaw(contract, "delete_grant", {
+    grantee: eve,
     dataId: "99",
   });
 
   t.assert(transactionResult.succeeded);
 
   foundGrants = await contract.view("find_grants", {
-    grantee: "eve.near",
+    grantee: eve,
   });
 
   t.assert(foundGrants.length == 0);
 
-  transactionResult = await root.callRaw(contract, "delete_grant", {
-    grantee: "eve.near",
+  transactionResult = await testAccount.callRaw(contract, "delete_grant", {
+    grantee: eve,
     dataId: "99",
     lockedUntil: 0,
   });
@@ -186,7 +199,7 @@ test("everything", async (t) => {
   t.assert(transactionResult.succeeded);
 
   foundGrants = await contract.view("find_grants", {
-    grantee: "eve.near",
+    grantee: eve,
   });
 
   t.assert(foundGrants.length == 0);
@@ -198,14 +211,14 @@ test("everything", async (t) => {
 
   lockedUntil = (Date.now() + 24*60*60*1000) * 1e6;
 
-  await root.call(contract, "insert_grant", {
-    grantee: "eve.near",
+  await testAccount.call(contract, "insert_grant", {
+    grantee: eve,
     dataId: "99",
     lockedUntil: lockedUntil,
   });
 
-  transactionResult = await root.callRaw(contract, "delete_grant", {
-    grantee: "eve.near",
+  transactionResult = await testAccount.callRaw(contract, "delete_grant", {
+    grantee: eve,
     dataId: "99",
     lockeduntil: lockedUntil,
   });
@@ -214,19 +227,19 @@ test("everything", async (t) => {
   t.assert(transactionResult.receiptFailureMessagesContain("Grant is timelocked"));
 
   foundGrants = await contract.view("find_grants", {
-    grantee: "eve.near",
+    grantee: eve,
   });
 
   t.assert(foundGrants.length == 1);
 
-  transactionResult = await root.callRaw(contract, "delete_grant", {
-    grantee: "eve.near",
+  transactionResult = await testAccount.callRaw(contract, "delete_grant", {
+    grantee: eve,
     dataId: "99",
     lockedUntil: 0,
   });
 
   foundGrants = await contract.view("find_grants", {
-    grantee: "eve.near",
+    grantee: eve,
   });
 
   t.assert(foundGrants.length == 1);
