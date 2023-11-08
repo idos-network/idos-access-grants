@@ -5,7 +5,7 @@ use std::{
 
 use serde::Deserialize;
 use serde_json::json;
-use workspaces::{types::SecretKey, Account, Contract};
+use near_workspaces::{types::SecretKey, Account, Contract};
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Grant {
@@ -16,15 +16,12 @@ pub struct Grant {
 }
 
 fn extract_public_key(secret_key: &SecretKey) -> String {
-    // FIXME: What's the right way to serialize this without the '"'s?
-    serde_json::to_string(&secret_key.public_key())
-        .unwrap()
-        .replace("\"", "")
+    secret_key.public_key().to_string()
 }
 
 async fn create_public_key() -> anyhow::Result<String> {
     Ok(extract_public_key(&SecretKey::from_random(
-        workspaces::types::KeyType::ED25519,
+        near_workspaces::types::KeyType::ED25519,
     )))
 }
 
@@ -33,7 +30,7 @@ async fn main() -> anyhow::Result<()> {
     let wasm_arg: &str = &(env::args().nth(1).unwrap());
     let wasm_filepath = fs::canonicalize(env::current_dir()?.join(wasm_arg))?;
 
-    let worker = workspaces::sandbox().await?;
+    let worker = near_workspaces::sandbox().await?;
     let wasm = std::fs::read(wasm_filepath)?;
     let contract = worker.dev_deploy(&wasm).await?;
 
@@ -429,14 +426,14 @@ async fn test_everything(
         .unwrap();
     assert_eq!(grants, vec![]);
 
-    assert!(test_account
-        .call(contract.id(), "find_grants")
-        .args_json(json!({"data_id": "A2"}))
-        .view()
-        .await
-        .unwrap_err()
-        .to_string()
-        .contains("Required argument: `owner` and/or `grantee`"));
+    assert!(
+        format!("{:?}", test_account
+            .view(contract.id(), "find_grants")
+            .args_json(json!({"data_id": "A2"}))
+            .await
+            .expect_err("find_grants should have panicked")
+        ).contains("Required argument: `owner` and/or `grantee`")
+    );
 
     println!("      Passed ✅ test_everything");
     Ok(())

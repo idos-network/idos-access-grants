@@ -27,9 +27,8 @@ pub struct Grant {
 pub fn derive_grant_id(grant: &Grant) -> String {
     let id = format!(
         "{}{}{}{}",
-        // FIXME: What's the right way to serialize this without the '"'s?
-        to_string(&grant.owner).unwrap().replace("\"", ""),
-        to_string(&grant.grantee).unwrap().replace("\"", ""),
+        to_string(&grant.owner).unwrap(),
+        to_string(&grant.grantee).unwrap(),
         grant.data_id,
         grant.locked_until,
     );
