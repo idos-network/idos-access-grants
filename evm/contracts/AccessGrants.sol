@@ -13,6 +13,9 @@ contract AccessGrants {
         uint256 lockedUntil;
     }
 
+    address _contractDeployer = msg.sender;
+
+    mapping(address => bool) private _issuers;
     mapping(bytes32 => Grant) private _grantsById;
 
     mapping(address => EnumerableSet.Bytes32Set) private _grantIdsByOwner;
@@ -21,7 +24,9 @@ contract AccessGrants {
 
     bytes32 private constant _WILDCARD_DATA_ID = keccak256(abi.encodePacked("0"));
 
-    constructor() {}
+    constructor() {
+        _issuers[msg.sender] = true;
+    }
 
     function insertGrant(
         address grantee,
@@ -143,4 +148,51 @@ contract AccessGrants {
     ) private pure returns (bool) {
         return keccak256(abi.encodePacked((dataId))) == _WILDCARD_DATA_ID;
     }
+
+    function insertGrantAsIssuer(
+        address owner,
+        address grantee,
+        string memory dataId,
+        uint256 lockedUntil
+    ) external {
+        require(_issuers[msg.sender] == true, "Access denied");
+
+        Grant memory grant = Grant({
+            owner: owner,
+            grantee: grantee,
+            dataId: dataId,
+            lockedUntil: lockedUntil
+        });
+
+        bytes32 grantId = _deriveGrantId(grant);
+
+        require(_grantsById[grantId].owner == address(0), "Grant already exists");
+
+        _grantsById[grantId] = grant;
+        _grantIdsByOwner[grant.owner].add(grantId);
+        _grantIdsByGrantee[grant.grantee].add(grantId);
+        _grantIdsByDataId[grant.dataId].add(grantId);
+    }
+
+    function insertIssuer(
+        address issuer
+    ) external {
+        require(_issuers[msg.sender] == true, "Access denied");
+
+        _issuers[issuer] = true;
+    }
+
+    function removeIssuer(
+        address issuer
+    ) external {
+        require(_issuers[msg.sender] == true, "Access denied");
+
+        require(issuer != _contractDeployer, "No way, you can't remove me! HA-HA-HA");
+
+        delete _issuers[issuer];
+    }
 }
+
+
+
+
