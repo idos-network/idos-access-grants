@@ -187,8 +187,6 @@ contract AccessGrants {
     ) external {
         require(_issuers[msg.sender] == true, "Access denied");
 
-        require(issuer != _contractDeployer, "No way, you can't remove me! HA-HA-HA");
-
         delete _issuers[issuer];
     }
 }
