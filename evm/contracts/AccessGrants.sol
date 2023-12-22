@@ -2,6 +2,7 @@
 pragma solidity =0.8.19;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 
 contract AccessGrants {
     using EnumerableSet for EnumerableSet.Bytes32Set;
@@ -25,24 +26,35 @@ contract AccessGrants {
 
     function insertGrant(
         address grantee,
-        string memory dataId,
+        string calldata dataId,
         uint256 lockedUntil
     ) external {
-        Grant memory grant = Grant({
-            owner: msg.sender,
-            grantee: grantee,
-            dataId: dataId,
-            lockedUntil: lockedUntil
-        });
+         _insertGrant(msg.sender, grantee, dataId, lockedUntil);
+    }
 
-        bytes32 grantId = _deriveGrantId(grant);
-
-        require(_grantsById[grantId].owner == address(0), "Grant already exists");
-
-        _grantsById[grantId] = grant;
-        _grantIdsByOwner[grant.owner].add(grantId);
-        _grantIdsByGrantee[grant.grantee].add(grantId);
-        _grantIdsByDataId[grant.dataId].add(grantId);
+    function insertGrantBySignature(
+        address owner,
+        address grantee,
+        string calldata dataId,
+        uint256 lockedUntil,
+        bytes calldata signature
+    ) external {
+        require(
+            SignatureChecker.isValidSignatureNow(
+                owner,
+                    ECDSA.toEthSignedMessageHash(
+                        abi.encode(
+                            owner,
+                            grantee,
+                            dataId,
+                            lockedUntil
+                        )
+                ),
+                signature
+            ),
+            "Signature doesn't match"
+        );
+        _insertGrant(owner, grantee, dataId, lockedUntil);
     }
 
     function deleteGrant(
@@ -125,6 +137,29 @@ contract AccessGrants {
         }
 
         return grants;
+    }
+
+    function _insertGrant(
+        address owner,
+        address grantee,
+        string calldata dataId,
+        uint256 lockedUntil
+    ) private {
+        Grant memory grant = Grant({
+            owner: owner,
+            grantee: grantee,
+            dataId: dataId,
+            lockedUntil: lockedUntil
+        });
+
+        bytes32 grantId = _deriveGrantId(grant);
+
+        require(_grantsById[grantId].owner == address(0), "Grant already exists");
+
+        _grantsById[grantId] = grant;
+        _grantIdsByOwner[grant.owner].add(grantId);
+        _grantIdsByGrantee[grant.grantee].add(grantId);
+        _grantIdsByDataId[grant.dataId].add(grantId);
     }
 
     function _deriveGrantId(
