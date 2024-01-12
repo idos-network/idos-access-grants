@@ -24,21 +24,39 @@ describe("AccessGrants", function () {
 
   describe("Grant management", function () {
     describe("Creating grants", function () {
-      it("A grant can only be owned by its creator", async function () {
-        const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
+      describe("By owner through insertGrant", function () {
+        it("A grant can only be owned by its creator", async function () {
+          const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
 
-        let grants = await accessGrants.findGrants(owner, grantee, "1A");
+          let grants = await accessGrants.findGrants(owner, grantee, "1A");
 
-        expect(grants.length).to.equal(1);
-        expect(grants[0].owner).to.equal(owner.address);
+          expect(grants.length).to.equal(1);
+          expect(grants[0].owner).to.equal(owner.address);
+        });
+
+        it("A duplicate grant cannot be created", async function () {
+          const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
+
+          await expect(
+            accessGrants.connect(owner).insertGrant(grantee, "1A", NO_TIMELOCK)
+          ).to.be.revertedWith("Grant already exists");
+        });
       });
 
-      it("A duplicate grant cannot be created", async function () {
-        const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
+      describe("By anybody through insertGrantBySignature", function () {
+        it("Inserts grant", async function () {
+          const { accessGrants, signer1: caller } = await loadFixture(deployAndPopulateContractFixture);
+          const owner = "0x311CEe6648df431EbbeA38dfB680C28661c893Ea";
+          const grantee = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266";
+          const dataId = "849690b7-fee1-46d8-8c91-0268b0cc1850";
+          const lockedUntil = 50;
+          const signature = "0xdda9acd962714be67a2b0fe14c4ffa5e51c2912f463f72a293d9157ccea1a31b15541a5e5dcf35e4bf6e3bb58b3e5ae569859cfd3c6272a8ff647d544f0cea061b";
 
-        await expect(
-          accessGrants.connect(owner).insertGrant(grantee, "1A", NO_TIMELOCK)
-        ).to.be.revertedWith("Grant already exists");
+          await accessGrants.connect(caller).insertGrantBySignature(owner, grantee, dataId, lockedUntil, signature);
+          let grants = await accessGrants.findGrants(owner, grantee, dataId);
+
+          expect(grants.length).to.equal(1);
+        })
       });
     });
 
