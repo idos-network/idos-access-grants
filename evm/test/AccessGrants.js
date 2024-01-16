@@ -45,18 +45,35 @@ describe("AccessGrants", function () {
 
       describe("By anybody through insertGrantBySignature", function () {
         it("Inserts grant", async function () {
-          const { accessGrants, signer1: caller } = await loadFixture(deployAndPopulateContractFixture);
-          const owner = "0x311CEe6648df431EbbeA38dfB680C28661c893Ea";
-          const grantee = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266";
+          const { accessGrants, signer1: caller, signer2: owner } = await loadFixture(deployAndPopulateContractFixture);
+          const owner_address = await owner.getAddress();
+          const grantee_address = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266";
           const dataId = "849690b7-fee1-46d8-8c91-0268b0cc1850";
           const lockedUntil = 50;
-          const signature = "0xdda9acd962714be67a2b0fe14c4ffa5e51c2912f463f72a293d9157ccea1a31b15541a5e5dcf35e4bf6e3bb58b3e5ae569859cfd3c6272a8ff647d544f0cea061b";
+          const digest = ethers.AbiCoder.defaultAbiCoder().encode(
+            ["address", "address", "string", "uint256"],
+            [owner_address, grantee_address, dataId, lockedUntil]
+          );
+          const signature = await owner.signMessage(ethers.getBytes(digest));
 
-          await accessGrants.connect(caller).insertGrantBySignature(owner, grantee, dataId, lockedUntil, signature);
-          let grants = await accessGrants.findGrants(owner, grantee, dataId);
+          await accessGrants.connect(caller).insertGrantBySignature(owner_address, grantee_address, dataId, lockedUntil, signature);
+          let grants = await accessGrants.findGrants(owner_address, grantee_address, dataId);
 
           expect(grants.length).to.equal(1);
-        })
+        });
+
+        it("Fails when the signature is wrong", async function () {
+          const { accessGrants, signer1: caller, signer2: owner } = await loadFixture(deployAndPopulateContractFixture);
+          const owner_address = await owner.getAddress();
+          const grantee_address = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266";
+          const dataId = "849690b7-fee1-46d8-8c91-0268b0cc1850";
+          const lockedUntil = 50;
+          const signature = "0xcda9acd962714be67a2b0fe14c4ffa5e51c2912f463f72a293d9157ccea1a31b15541a5e5dcf35e4bf6e3bb58b3e5ae569859cfd3c6272a8ff647d544f0cea061c";
+
+          await expect(
+            accessGrants.connect(caller).insertGrantBySignature(owner_address, grantee_address, dataId, lockedUntil, signature)
+          ).to.be.revertedWith("Signature doesn't match");
+        });
       });
     });
 
