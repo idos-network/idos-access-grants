@@ -5,15 +5,15 @@ import {
   call,
   view,
   LookupMap,
+  AccountId,
   encode,
   decode,
   assert,
 } from "near-sdk-js";
-import { PublicKey, PublicKeyString } from "./public_key";
 
 class Grant {
-  owner: PublicKeyString;
-  grantee: PublicKeyString;
+  owner: AccountId;
+  grantee: AccountId;
   dataId: string;
   lockedUntil: bigint;
 
@@ -47,11 +47,11 @@ export class AccessGrants {
     dataId,
     lockedUntil
   }: {
-    grantee: PublicKeyString,
+    grantee: AccountId,
     dataId: string,
     lockedUntil: bigint
   }): void {
-    const owner = new PublicKey(near.signerAccountPk()).toString();
+    const owner = near.signerAccountId();
     lockedUntil = lockedUntil || 0n;
 
     const grant = new Grant({ owner, grantee, dataId, lockedUntil });
@@ -82,11 +82,11 @@ export class AccessGrants {
     dataId,
     lockedUntil
   }: {
-    grantee: PublicKeyString,
+    grantee: AccountId,
     dataId: string,
     lockedUntil: bigint
   }): void {
-    const owner = new PublicKey(near.signerAccountPk()).toString();
+    const owner = near.signerAccountId();
     lockedUntil = lockedUntil || 0n;
 
     const grants = this.find_grants({ owner, grantee, dataId });
@@ -120,7 +120,7 @@ export class AccessGrants {
     grantee,
     dataId,
   }: {
-    grantee: PublicKeyString,
+    grantee: AccountId,
     dataId: string,
   }): Grant[] {
     return this.find_grants({ owner: null, grantee, dataId });
@@ -133,8 +133,8 @@ export class AccessGrants {
     grantee,
     dataId,
   }: {
-    owner: PublicKeyString,
-    grantee: PublicKeyString,
+    owner: AccountId,
+    grantee: AccountId,
     dataId: string,
   }): Grant[] {
     assert(owner || grantee, "Required argument: `owner` and/or `grantee`");
@@ -160,7 +160,7 @@ export class AccessGrants {
     grant: Grant
   }): string {
     const { owner, grantee, dataId, lockedUntil } = grant;
-
+    
     const grantId = decode(
       near.keccak256(
         encode(owner + grantee + dataId + lockedUntil),
