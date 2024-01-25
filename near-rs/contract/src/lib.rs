@@ -2,7 +2,7 @@ extern crate near_sdk;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
 use near_sdk::serde::Serialize;
-use near_sdk::{env, near_bindgen, require, AccountId, EpochHeight};
+use near_sdk::{env, near_bindgen, require, AccountId, EpochHeight, PublicKey};
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize)]
@@ -10,7 +10,7 @@ pub struct FractalRegistry {
     pub grants_by_id: LookupMap<String, Grant>,
 
     pub grant_ids_by_owner: LookupMap<AccountId, Vec<String>>,
-    pub grant_ids_by_grantee: LookupMap<AccountId, Vec<String>>,
+    pub grant_ids_by_grantee: LookupMap<PublicKey, Vec<String>>,
     pub grant_ids_by_data_id: LookupMap<String, Vec<String>>,
 }
 
@@ -18,7 +18,7 @@ pub struct FractalRegistry {
 #[serde(crate = "near_sdk::serde")]
 pub struct Grant {
     owner: AccountId,
-    grantee: AccountId,
+    grantee: PublicKey,
     data_id: String,
     locked_until: EpochHeight,
 }
@@ -28,10 +28,10 @@ pub struct Grant {
 fn derive_grant_id_example() {
     // Just to make sure we don't accidentally change the way we derive grant_ids.
     assert_eq!(
-        "0015e82142671318db299c01219c6ae52489ef2b8b082c66d554bcdbcd1b6727",
+        "ecbff9e9eebcb53cca1e97bfe276224b127e3e0fba913275247ff2dde0cb7525",
         derive_grant_id(&Grant{
-            owner: "owner.near".parse().unwrap(),
-            grantee: "grantee.near".parse().unwrap(),
+            owner: "my-cool-account.near".parse().unwrap(),
+            grantee: "ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp".parse().unwrap(),
             data_id: "some data".into(),
             locked_until: 1337,
         })
@@ -40,7 +40,7 @@ fn derive_grant_id_example() {
 
 pub fn derive_grant_id(grant: &Grant) -> String {
     let id = format!(
-        "{}{}{}{}",
+        "{}{:?}{}{}",
         grant.owner, grant.grantee, grant.data_id, grant.locked_until,
     );
 
@@ -90,7 +90,7 @@ fn remove_values<
 impl FractalRegistry {
     pub fn insert_grant(
         &mut self,
-        grantee: AccountId,
+        grantee: PublicKey,
         data_id: String,
         locked_until: Option<EpochHeight>,
     ) {
@@ -119,7 +119,7 @@ impl FractalRegistry {
 
     pub fn delete_grant(
         &mut self,
-        grantee: AccountId,
+        grantee: PublicKey,
         data_id: String,
         locked_until: Option<EpochHeight>,
     ) {
@@ -152,14 +152,14 @@ impl FractalRegistry {
         });
     }
 
-    pub fn grants_for(&self, grantee: AccountId, data_id: String) -> Vec<Grant> {
+    pub fn grants_for(&self, grantee: PublicKey, data_id: String) -> Vec<Grant> {
         self.find_grants(None, Some(grantee), Some(data_id))
     }
 
     pub fn find_grants(
         &self,
         owner: Option<AccountId>,
-        grantee: Option<AccountId>,
+        grantee: Option<PublicKey>,
         data_id: Option<String>,
     ) -> Vec<Grant> {
         let mut grant_id_searches = Vec::new();

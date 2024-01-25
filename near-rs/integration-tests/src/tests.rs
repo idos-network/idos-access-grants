@@ -45,9 +45,14 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
     let mut result;
     let mut grants;
 
+    let bob = "ed25519:337mMe7y3aobP3GJGcDYJBxuZoLbcs1SzLYaAt5dNjnG";
+    let charlie = "ed25519:GCrv4FBs5QyKwGm1sEX5suNeDFuWUkW4Gh9DqHnXr3ro";
+    let dave = "ed25519:9Vaeikpf6tF7smXvkEcXimST5Vw7u7idZTUDjFLBx3i4";
+    let eve = "ed25519:8vjCFQe5C4crR66gYoBb1NkmuBMZPjLNNXg27MuCCmbm";
+
     grants = user
         .call(contract.id(), "find_grants")
-        .args_json(json!({"grantee": "bob.near", "data_id": "A1"}))
+        .args_json(json!({"grantee": bob, "data_id": "A1"}))
         .view()
         .await?
         .json::<Vec<Grant>>()
@@ -56,14 +61,14 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
 
     result = user
         .call(contract.id(), "insert_grant")
-        .args_json(json!({"grantee": "bob.near", "data_id": "A1"}))
+        .args_json(json!({"grantee": bob, "data_id": "A1"}))
         .transact()
         .await?;
     assert!(result.is_success());
 
     result = user
         .call(contract.id(), "insert_grant")
-        .args_json(json!({"grantee": "bob.near", "data_id": "A1"}))
+        .args_json(json!({"grantee": bob, "data_id": "A1"}))
         .transact()
         .await?;
     assert!(result.is_failure());
@@ -75,14 +80,14 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
 
     result = user
         .call(contract.id(), "insert_grant")
-        .args_json(json!({"grantee": "bob.near", "data_id": "A2"}))
+        .args_json(json!({"grantee": bob, "data_id": "A2"}))
         .transact()
         .await?;
     assert!(result.is_success());
 
     result = user
         .call(contract.id(), "insert_grant")
-        .args_json(json!({"grantee": "charlie.near", "data_id": "A2"}))
+        .args_json(json!({"grantee": charlie, "data_id": "A2"}))
         .transact()
         .await?;
     assert!(result.is_success());
@@ -98,40 +103,17 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
         grants,
         vec![
             Grant {
-                grantee: "bob.near".into(),
+                grantee: bob.into(),
                 data_id: "A1".into(),
                 locked_until: 0
             },
             Grant {
-                grantee: "bob.near".into(),
+                grantee: bob.into(),
                 data_id: "A2".into(),
                 locked_until: 0
             },
             Grant {
-                grantee: "charlie.near".into(),
-                data_id: "A2".into(),
-                locked_until: 0
-            },
-        ]
-    );
-
-    grants = user
-        .call(contract.id(), "find_grants")
-        .args_json(json!({"grantee": "bob.near"}))
-        .view()
-        .await?
-        .json::<Vec<Grant>>()
-        .unwrap();
-    assert_eq!(
-        grants,
-        vec![
-            Grant {
-                grantee: "bob.near".into(),
-                data_id: "A1".into(),
-                locked_until: 0
-            },
-            Grant {
-                grantee: "bob.near".into(),
+                grantee: charlie.into(),
                 data_id: "A2".into(),
                 locked_until: 0
             },
@@ -140,7 +122,7 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
 
     grants = user
         .call(contract.id(), "find_grants")
-        .args_json(json!({"owner": owner, "grantee": "bob.near"}))
+        .args_json(json!({ "grantee": bob }))
         .view()
         .await?
         .json::<Vec<Grant>>()
@@ -149,12 +131,35 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
         grants,
         vec![
             Grant {
-                grantee: "bob.near".into(),
+                grantee: bob.into(),
                 data_id: "A1".into(),
                 locked_until: 0
             },
             Grant {
-                grantee: "bob.near".into(),
+                grantee: bob.into(),
+                data_id: "A2".into(),
+                locked_until: 0
+            },
+        ]
+    );
+
+    grants = user
+        .call(contract.id(), "find_grants")
+        .args_json(json!({"owner": owner, "grantee": bob}))
+        .view()
+        .await?
+        .json::<Vec<Grant>>()
+        .unwrap();
+    assert_eq!(
+        grants,
+        vec![
+            Grant {
+                grantee: bob.into(),
+                data_id: "A1".into(),
+                locked_until: 0
+            },
+            Grant {
+                grantee: bob.into(),
                 data_id: "A2".into(),
                 locked_until: 0
             },
@@ -172,12 +177,12 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
         grants,
         vec![
             Grant {
-                grantee: "bob.near".into(),
+                grantee: bob.into(),
                 data_id: "A2".into(),
                 locked_until: 0
             },
             Grant {
-                grantee: "charlie.near".into(),
+                grantee: charlie.into(),
                 data_id: "A2".into(),
                 locked_until: 0
             },
@@ -186,7 +191,7 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
 
     grants = user
         .call(contract.id(), "find_grants")
-        .args_json(json!({"grantee": "bob.near", "data_id": "A1"}))
+        .args_json(json!({"grantee": bob, "data_id": "A1"}))
         .view()
         .await?
         .json::<Vec<Grant>>()
@@ -194,7 +199,7 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
     assert_eq!(
         grants,
         vec![Grant {
-            grantee: "bob.near".into(),
+            grantee: bob.into(),
             data_id: "A1".into(),
             locked_until: 0
         },]
@@ -202,7 +207,7 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
 
     grants = user
         .call(contract.id(), "find_grants")
-        .args_json(json!({"grantee": "charlie.near", "data_id": "A1"}))
+        .args_json(json!({"grantee": charlie, "data_id": "A1"}))
         .view()
         .await?
         .json::<Vec<Grant>>()
@@ -211,14 +216,14 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
 
     result = user
         .call(contract.id(), "delete_grant")
-        .args_json(json!({"grantee": "bob.near", "data_id": "A1"}))
+        .args_json(json!({"grantee": bob, "data_id": "A1"}))
         .transact()
         .await?;
     assert!(result.is_success());
 
     grants = user
         .call(contract.id(), "find_grants")
-        .args_json(json!({"grantee": "bob.near"}))
+        .args_json(json!({ "grantee": bob }))
         .view()
         .await?
         .json::<Vec<Grant>>()
@@ -226,7 +231,7 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
     assert_eq!(
         grants,
         vec![Grant {
-            grantee: "bob.near".into(),
+            grantee: bob.into(),
             data_id: "A2".into(),
             locked_until: 0
         },]
@@ -234,7 +239,7 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
 
     grants = user
         .call(contract.id(), "find_grants")
-        .args_json(json!({"grantee": "bob.near", "data_id": "A1"}))
+        .args_json(json!({"grantee": bob, "data_id": "A1"}))
         .view()
         .await?
         .json::<Vec<Grant>>()
@@ -252,12 +257,12 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
         grants,
         vec![
             Grant {
-                grantee: "bob.near".into(),
+                grantee: bob.into(),
                 data_id: "A2".into(),
                 locked_until: 0
             },
             Grant {
-                grantee: "charlie.near".into(),
+                grantee: charlie.into(),
                 data_id: "A2".into(),
                 locked_until: 0
             },
@@ -275,14 +280,14 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
 
     result = user
         .call(contract.id(), "insert_grant")
-        .args_json(json!({"grantee": "dave.near", "data_id": "A2", "locked_until": in_the_future}))
+        .args_json(json!({"grantee": dave, "data_id": "A2", "locked_until": in_the_future}))
         .transact()
         .await?;
     assert!(result.is_success());
 
     result = user
         .call(contract.id(), "delete_grant")
-        .args_json(json!({"grantee": "dave.near", "data_id": "A2"}))
+        .args_json(json!({"grantee": dave, "data_id": "A2"}))
         .transact()
         .await?;
     assert!(result.is_failure());
@@ -294,21 +299,21 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
 
     result = user
         .call(contract.id(), "insert_grant")
-        .args_json(json!({"grantee": "eve.near", "data_id": "A3", "locked_until": in_the_past}))
+        .args_json(json!({"grantee": eve, "data_id": "A3", "locked_until": in_the_past}))
         .transact()
         .await?;
     assert!(result.is_success());
 
     result = user
         .call(contract.id(), "delete_grant")
-        .args_json(json!({"grantee": "eve.near", "data_id": "A3", "locked_until": in_the_past}))
+        .args_json(json!({"grantee": eve, "data_id": "A3", "locked_until": in_the_past}))
         .transact()
         .await?;
     assert!(result.is_success());
 
     grants = user
         .call(contract.id(), "find_grants")
-        .args_json(json!({"grantee": "eve.near"}))
+        .args_json(json!({ "grantee": eve }))
         .view()
         .await?
         .json::<Vec<Grant>>()
@@ -317,35 +322,35 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
 
     result = user
         .call(contract.id(), "insert_grant")
-        .args_json(json!({"grantee": "eve.near", "data_id": "A3", "locked_until": in_the_past}))
+        .args_json(json!({"grantee": eve, "data_id": "A3", "locked_until": in_the_past}))
         .transact()
         .await?;
     assert!(result.is_success());
 
     result = user
         .call(contract.id(), "insert_grant")
-        .args_json(json!({"grantee": "eve.near", "data_id": "A3", "locked_until": in_the_paster}))
+        .args_json(json!({"grantee": eve, "data_id": "A3", "locked_until": in_the_paster}))
         .transact()
         .await?;
     assert!(result.is_success());
 
     result = user
         .call(contract.id(), "insert_grant")
-        .args_json(json!({"grantee": "eve.near", "data_id": "A3", "locked_until": in_the_pastest}))
+        .args_json(json!({"grantee": eve, "data_id": "A3", "locked_until": in_the_pastest}))
         .transact()
         .await?;
     assert!(result.is_success());
 
     result = user
         .call(contract.id(), "delete_grant")
-        .args_json(json!({"grantee": "eve.near", "data_id": "A3", "locked_until": in_the_past}))
+        .args_json(json!({"grantee": eve, "data_id": "A3", "locked_until": in_the_past}))
         .transact()
         .await?;
     assert!(result.is_success());
 
     grants = user
         .call(contract.id(), "find_grants")
-        .args_json(json!({"grantee": "eve.near", "data_id": "A3"}))
+        .args_json(json!({"grantee": eve, "data_id": "A3"}))
         .view()
         .await?
         .json::<Vec<Grant>>()
@@ -354,12 +359,12 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
         grants,
         vec![
             Grant {
-                grantee: "eve.near".into(),
+                grantee: eve.into(),
                 data_id: "A3".into(),
                 locked_until: in_the_paster
             },
             Grant {
-                grantee: "eve.near".into(),
+                grantee: eve.into(),
                 data_id: "A3".into(),
                 locked_until: in_the_pastest
             },
@@ -368,14 +373,14 @@ async fn test_everything(user: &Account, contract: &Contract) -> anyhow::Result<
 
     result = user
         .call(contract.id(), "delete_grant")
-        .args_json(json!({"grantee": "eve.near", "data_id": "A3", "locked_until": 0}))
+        .args_json(json!({"grantee": eve, "data_id": "A3", "locked_until": 0}))
         .transact()
         .await?;
     assert!(result.is_success());
 
     grants = user
         .call(contract.id(), "find_grants")
-        .args_json(json!({"grantee": "eve.near", "data_id": "A3"}))
+        .args_json(json!({"grantee": eve, "data_id": "A3"}))
         .view()
         .await?
         .json::<Vec<Grant>>()
