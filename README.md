@@ -28,7 +28,7 @@ The contract functionality is straightforward:
 | :- | :- | :- |
 | `evm/` | Goerli | [`0x5b7d9b546B34ceD8AE0A26b090E0fDbB70e7224f`](https://goerli.etherscan.io/address/0x5b7d9b546B34ceD8AE0A26b090E0fDbB70e7224f#code) |
 | `evm/` | Sepolia | [`0x032b8275B13D3aEef180d13e29287535aCB667Ef`](https://sepolia.etherscan.io/address/0x032b8275B13D3aEef180d13e29287535aCB667Ef#code) |
-| `near-rs/` | NEAR Testnet | [`idos-dev-2.testnet`](https://explorer.testnet.near.org/accounts/idos-dev-2.testnet) | 
+| `near-rs/` | NEAR Testnet | [`idos-dev-2.testnet`](https://explorer.testnet.near.org/accounts/idos-dev-2.testnet) |
 | `near-rs/` | NEAR Mainnet | [`idos-dev-2.near`](https://explorer.mainnet.near.org/accounts/idos-dev-2.near) |
 
 ## Interface
