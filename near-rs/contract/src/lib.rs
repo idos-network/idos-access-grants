@@ -3,6 +3,7 @@ use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
 use near_sdk::serde::Serialize;
 use near_sdk::{env, near_bindgen, require, AccountId, EpochHeight, PublicKey};
+use near_sdk::serde_json::json;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize)]
@@ -28,7 +29,7 @@ pub struct Grant {
 fn derive_grant_id_example() {
     // Just to make sure we don't accidentally change the way we derive grant_ids.
     assert_eq!(
-        "ecbff9e9eebcb53cca1e97bfe276224b127e3e0fba913275247ff2dde0cb7525",
+        "8f3254135e2aeb003e10443cb54e2ca4830862fc4e774f6d98715d9668210caa",
         derive_grant_id(&Grant{
             owner: "my-cool-account.near".parse().unwrap(),
             grantee: "ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp".parse().unwrap(),
@@ -40,8 +41,8 @@ fn derive_grant_id_example() {
 
 pub fn derive_grant_id(grant: &Grant) -> String {
     let id = format!(
-        "{}{:?}{}{}",
-        grant.owner, grant.grantee, grant.data_id, grant.locked_until,
+        "{}{}{}{}",
+        grant.owner, String::from(&grant.grantee), grant.data_id, grant.locked_until,
     );
 
     hex::encode(env::keccak256(id.as_bytes()))

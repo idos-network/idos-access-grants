@@ -9,11 +9,51 @@ import {
   encode,
   decode,
   assert,
+  PublicKey,
+  CurveType,
+  UnknownCurve,
 } from "near-sdk-js";
+import { base58, hex } from "@scure/base";
+
+export function curveTypeToStr(value: CurveType): string {
+  switch (value) {
+      case CurveType.ED25519:
+          return "ed25519";
+      case CurveType.SECP256K1:
+          return "secp256k1";
+      default:
+          throw new UnknownCurve();
+  }
+}
+
+// pkoch: I got to these two vmPublicKey functions by running JSON.stringify on what I got inside the NEAR VM. Since
+// that's what I assume is running on the blockchain, even though it doesn't match the code in the SDK, I'm going
+// to assume the VM is the relevant truth.
+// biome-ignore lint/suspicious/noExplicitAny: see above
+const vmPublicKeyCurveType = (pk: PublicKey): CurveType => (pk as any).keyType as CurveType
+// biome-ignore lint/suspicious/noExplicitAny: see above
+const vmPublicKeyData = (pk: PublicKey): Uint8Array => new Uint8Array((pk.data as any).data)
+
+const publicKeyToString = (pk: PublicKey): string => {
+  const curveStr = curveTypeToStr(vmPublicKeyCurveType(pk))
+  const encoded = base58.encode(vmPublicKeyData(pk))
+  return `${curveStr}:${encoded}`;
+}
+
+const publicKeyToUint8Array = (pk: PublicKey): Uint8Array => {
+  return new Uint8Array((function* () {
+    yield vmPublicKeyCurveType(pk);
+
+    const data = vmPublicKeyData(pk);
+    for(let i = 0; i < data.length; i++) {
+      yield data.at(i);
+    }
+  })())
+}
 
 class Grant {
   owner: AccountId;
-  grantee: AccountId;
+  grantee: PublicKey;
   dataId: string;
   lockedUntil: bigint;
 
@@ -47,7 +87,7 @@ export class AccessGrants {
     dataId,
     lockedUntil
   }: {
-    grantee: AccountId,
+    grantee: PublicKey,
     dataId: string,
     lockedUntil: bigint
   }): void {
@@ -66,9 +106,10 @@ export class AccessGrants {
       owner,
       (this.grantIdsByOwner.get(owner) || []).concat(grantId),
     );
+    const granteeString = publicKeyToString(grantee);
     this.grantIdsByGrantee.set(
-      grantee,
-      (this.grantIdsByGrantee.get(grantee) || []).concat(grantId),
+      granteeString,
+      (this.grantIdsByGrantee.get(granteeString) || []).concat(grantId),
     );
     this.grantIdsByDataId.set(
       dataId,
@@ -82,7 +123,7 @@ export class AccessGrants {
     dataId,
     lockedUntil
   }: {
-    grantee: AccountId,
+    grantee: PublicKey,
     dataId: string,
     lockedUntil: bigint
   }): void {
@@ -103,9 +144,10 @@ export class AccessGrants {
           owner,
           (this.grantIdsByOwner.get(owner) || []).filter((id) => (id !== grantId)),
         );
+        const granteeString = publicKeyToString(grantee);
         this.grantIdsByGrantee.set(
-          grantee,
-          (this.grantIdsByGrantee.get(grantee) || []).filter((id) => (id !== grantId)),
+          granteeString,
+          (this.grantIdsByGrantee.get(granteeString) || []).filter((id) => (id !== grantId)),
         );
         this.grantIdsByDataId.set(
           dataId,
@@ -120,7 +162,7 @@ export class AccessGrants {
     grantee,
     dataId,
   }: {
-    grantee: AccountId,
+    grantee: PublicKey,
     dataId: string,
   }): Grant[] {
     return this.find_grants({ owner: null, grantee, dataId });
@@ -134,14 +176,15 @@ export class AccessGrants {
     dataId,
   }: {
     owner: AccountId,
-    grantee: AccountId,
+    grantee: PublicKey,
     dataId: string,
   }): Grant[] {
     assert(owner || grantee, "Required argument: `owner` and/or `grantee`");
 
+    const granteeString = publicKeyToString(grantee);
     const grantIdSearches = [
       this.grantIdsByOwner.get(owner),
-      this.grantIdsByGrantee.get(grantee),
+      this.grantIdsByGrantee.get(granteeString),
       this.grantIdsByDataId.get(dataId),
     ];
 
@@ -160,10 +203,10 @@ export class AccessGrants {
     grant: Grant
   }): string {
     const { owner, grantee, dataId, lockedUntil } = grant;
-    
-    const grantId = decode(
+
+    const grantId = hex.encode(
       near.keccak256(
-        encode(owner + grantee + dataId + lockedUntil),
+        encode(owner + publicKeyToString(grantee) + dataId + lockedUntil),
       ),
     );
 
