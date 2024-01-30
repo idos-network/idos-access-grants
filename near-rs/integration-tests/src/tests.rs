@@ -47,7 +47,6 @@ async fn main() -> anyhow::Result<()> {
     test_everything(
         &contract,
         &test_account,
-        &extract_public_key(&test_account.secret_key()),
         &create_public_key().await?,
         &create_public_key().await?,
         &create_public_key().await?,
@@ -61,7 +60,6 @@ async fn main() -> anyhow::Result<()> {
 async fn test_everything(
     contract: &Contract,
     test_account: &Account,
-    test: &str,
     bob: &str,
     charlie: &str,
     dave: &str,
@@ -69,6 +67,7 @@ async fn test_everything(
 ) -> anyhow::Result<()> {
     let mut result;
     let mut grants;
+    let test_account_id: &str = test_account.id();
 
     grants = test_account
         .call(contract.id(), "find_grants")
@@ -118,7 +117,7 @@ async fn test_everything(
 
     grants = test_account
         .call(contract.id(), "find_grants")
-        .args_json(json!({ "owner": test }))
+        .args_json(json!({ "owner": test_account_id }))
         .view()
         .await?
         .json::<Vec<Grant>>()
@@ -127,19 +126,19 @@ async fn test_everything(
         grants,
         vec![
             Grant {
-                owner: test.into(),
+                owner: test_account_id.into(),
                 grantee: bob.into(),
                 data_id: "A1".into(),
                 locked_until: 0
             },
             Grant {
-                owner: test.into(),
+                owner: test_account_id.into(),
                 grantee: bob.into(),
                 data_id: "A2".into(),
                 locked_until: 0
             },
             Grant {
-                owner: test.into(),
+                owner: test_account_id.into(),
                 grantee: charlie.into(),
                 data_id: "A2".into(),
                 locked_until: 0
@@ -158,13 +157,13 @@ async fn test_everything(
         grants,
         vec![
             Grant {
-                owner: test.into(),
+                owner: test_account_id.into(),
                 grantee: bob.into(),
                 data_id: "A1".into(),
                 locked_until: 0
             },
             Grant {
-                owner: test.into(),
+                owner: test_account_id.into(),
                 grantee: bob.into(),
                 data_id: "A2".into(),
                 locked_until: 0
@@ -174,7 +173,7 @@ async fn test_everything(
 
     grants = test_account
         .call(contract.id(), "find_grants")
-        .args_json(json!({"owner": test, "grantee": bob}))
+        .args_json(json!({"owner": test_account_id, "grantee": bob}))
         .view()
         .await?
         .json::<Vec<Grant>>()
@@ -183,13 +182,13 @@ async fn test_everything(
         grants,
         vec![
             Grant {
-                owner: test.into(),
+                owner: test_account_id.into(),
                 grantee: bob.into(),
                 data_id: "A1".into(),
                 locked_until: 0
             },
             Grant {
-                owner: test.into(),
+                owner: test_account_id.into(),
                 grantee: bob.into(),
                 data_id: "A2".into(),
                 locked_until: 0
@@ -199,7 +198,7 @@ async fn test_everything(
 
     grants = test_account
         .call(contract.id(), "find_grants")
-        .args_json(json!({"owner": test, "data_id": "A2"}))
+        .args_json(json!({"owner": test_account_id, "data_id": "A2"}))
         .view()
         .await?
         .json::<Vec<Grant>>()
@@ -208,13 +207,13 @@ async fn test_everything(
         grants,
         vec![
             Grant {
-                owner: test.into(),
+                owner: test_account_id.into(),
                 grantee: bob.into(),
                 data_id: "A2".into(),
                 locked_until: 0
             },
             Grant {
-                owner: test.into(),
+                owner: test_account_id.into(),
                 grantee: charlie.into(),
                 data_id: "A2".into(),
                 locked_until: 0
@@ -232,7 +231,7 @@ async fn test_everything(
     assert_eq!(
         grants,
         vec![Grant {
-            owner: test.into(),
+            owner: test_account_id.into(),
             grantee: bob.into(),
             data_id: "A1".into(),
             locked_until: 0
@@ -265,7 +264,7 @@ async fn test_everything(
     assert_eq!(
         grants,
         vec![Grant {
-            owner: test.into(),
+            owner: test_account_id.into(),
             grantee: bob.into(),
             data_id: "A2".into(),
             locked_until: 0
@@ -283,7 +282,7 @@ async fn test_everything(
 
     grants = test_account
         .call(contract.id(), "find_grants")
-        .args_json(json!({ "owner": test }))
+        .args_json(json!({ "owner": test_account_id }))
         .view()
         .await?
         .json::<Vec<Grant>>()
@@ -292,13 +291,13 @@ async fn test_everything(
         grants,
         vec![
             Grant {
-                owner: test.into(),
+                owner: test_account_id.into(),
                 grantee: bob.into(),
                 data_id: "A2".into(),
                 locked_until: 0
             },
             Grant {
-                owner: test.into(),
+                owner: test_account_id.into(),
                 grantee: charlie.into(),
                 data_id: "A2".into(),
                 locked_until: 0
@@ -396,13 +395,13 @@ async fn test_everything(
         grants,
         vec![
             Grant {
-                owner: test.into(),
+                owner: test_account_id.into(),
                 grantee: eve.into(),
                 data_id: "A3".into(),
                 locked_until: in_the_paster
             },
             Grant {
-                owner: test.into(),
+                owner: test_account_id.into(),
                 grantee: eve.into(),
                 data_id: "A3".into(),
                 locked_until: in_the_pastest
