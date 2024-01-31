@@ -27,21 +27,24 @@ pub struct Grant {
 #[test]
 fn derive_grant_id_example() {
     // Just to make sure we don't accidentally change the way we derive grant_ids.
+
+    let grant = Grant{
+        owner: "ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp".parse().unwrap(),
+        grantee: "secp256k1:qMoRgcoXai4mBPsdbHi1wfyxF9TdbPCF4qSDQTRP3TfescSRoUdSx6nmeQoN3aiwGzwMyGXAb1gUjBTv5AY8DXj".parse().unwrap(),
+        data_id: "some data".into(),
+        locked_until: 1337,
+    };
+
     assert_eq!(
-        "76191fb1c82d02aba62433cec21abb5a5ee93eb713736bc32abf802f46c3b17d",
-        derive_grant_id(&Grant{
-            owner: "ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp".parse().unwrap(),
-            grantee: "secp256k1:qMoRgcoXai4mBPsdbHi1wfyxF9TdbPCF4qSDQTRP3TfescSRoUdSx6nmeQoN3aiwGzwMyGXAb1gUjBTv5AY8DXj".parse().unwrap(),
-            data_id: "some data".into(),
-            locked_until: 1337,
-        })
-    )
+        "b9e5aea4566ae138ab9e570b07c1694694a3d8ee8af8c70afd729c3de9f3e4ba",
+        derive_grant_id(&grant)
+    );
 }
 
 pub fn derive_grant_id(grant: &Grant) -> String {
     let id = format!(
-        "{:?}{:?}{}{}",
-        grant.owner, grant.grantee, grant.data_id, grant.locked_until,
+        "{}{}{}{}",
+        Into::<String>::into(&grant.owner), Into::<String>::into(&grant.grantee), grant.data_id, grant.locked_until,
     );
 
     hex::encode(env::keccak256(id.as_bytes()))
