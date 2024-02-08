@@ -24,6 +24,20 @@ contract AccessGrants {
 
     constructor() {}
 
+    event GrantAdded(
+        address indexed owner,
+        address indexed grantee,
+        string  indexed dataId,
+        uint256         lockedUntil
+    );
+
+    event GrantDeleted(
+        address indexed owner,
+        address indexed grantee,
+        string  indexed dataId,
+        uint256         lockedUntil
+    );
+
     function insertGrant(
         address grantee,
         string calldata dataId,
@@ -78,6 +92,13 @@ contract AccessGrants {
                 _grantIdsByOwner[grant.owner].remove(grantId);
                 _grantIdsByGrantee[grant.grantee].remove(grantId);
                 _grantIdsByDataId[grant.dataId].remove(grantId);
+
+                emit GrantDeleted(
+                    grant.owner,
+                    grant.grantee,
+                    grant.dataId,
+                    grant.lockedUntil
+                );
             }
         }
     }
@@ -160,6 +181,13 @@ contract AccessGrants {
         _grantIdsByOwner[grant.owner].add(grantId);
         _grantIdsByGrantee[grant.grantee].add(grantId);
         _grantIdsByDataId[grant.dataId].add(grantId);
+
+        emit GrantAdded(
+            grant.owner,
+            grant.grantee,
+            grant.dataId,
+            grant.lockedUntil
+        );
     }
 
     function _deriveGrantId(
