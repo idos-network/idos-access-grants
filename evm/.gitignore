@@ -8,6 +8,7 @@ artifacts/contracts/AccessGrants.sol/*
 
 cache
 node_modules
+yarn-error.log
 
 # local env files
 .env.local
