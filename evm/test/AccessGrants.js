@@ -372,4 +372,51 @@ describe("AccessGrants", function () {
       });
     });
   });
+
+  describe("Events", function () {
+    describe("when a grant inserted", function () {
+      it("Creates GrantAdded event", async function () {
+        const { accessGrants, signer1: caller, signer2: owner, signer3: grantee } = await loadFixture(deployAndPopulateContractFixture);
+        const dataId = "849690b7-fee1-46d8-8c91-0268b0cc1850";
+        const lockedUntil = 50n;
+        await accessGrants.connect(owner).insertGrant(grantee, dataId, lockedUntil);
+
+        const eventTopic = ethers.id("GrantAdded(address,address,string,uint256)");
+        const logs = await ethers.provider.getLogs({
+          address: accessGrants.address,
+          topics: [
+            eventTopic,
+            ethers.zeroPadValue(owner.address, 32),
+            ethers.zeroPadValue(grantee.address, 32),
+            ethers.keccak256(ethers.toUtf8Bytes(dataId)),
+          ],
+        });
+        expect(logs.length).to.equal(1);
+        expect(logs[0].data).to.equal(lockedUntil);
+      });
+    });
+    describe("when a grant deleted", function () {
+      it("Creates GrantDeleted event", async function () {
+        const { accessGrants, signer1: caller, signer2: owner, signer3: grantee } = await loadFixture(deployAndPopulateContractFixture);
+        const dataId = "849690b7-fee1-46d8-8c91-0268b0cc1850";
+        const lockedUntil = 50n;
+        await accessGrants.connect(owner).insertGrant(grantee, dataId, lockedUntil);
+        await accessGrants.connect(owner).deleteGrant(grantee, dataId, lockedUntil);
+
+        const eventTopic = ethers.id("GrantDeleted(address,address,string,uint256)");
+        const logs = await ethers.provider.getLogs({
+          address: accessGrants.address,
+          topics: [
+            eventTopic,
+            ethers.zeroPadValue(owner.address, 32),
+            ethers.zeroPadValue(grantee.address, 32),
+            ethers.keccak256(ethers.toUtf8Bytes(dataId)),
+          ],
+        });
+        expect(logs.length).to.equal(1);
+        expect(logs[0].data).to.equal(lockedUntil);
+      });
+    });
+
+  });
 });
