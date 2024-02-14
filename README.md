@@ -28,7 +28,7 @@ The contract functionality is straightforward:
 | Source | Chain | Address |
 | :- | :- | :- |
 | `evm/` | Goerli | [`0x5b7d9b546B34ceD8AE0A26b090E0fDbB70e7224f`](https://goerli.etherscan.io/address/0x5b7d9b546B34ceD8AE0A26b090E0fDbB70e7224f#code) |
-| `evm/` | Sepolia | [`0xf687df77d865b651b1f212d0b61bbf66e4797c25`](https://sepolia.etherscan.io/address/0xf687df77d865b651b1f212d0b61bbf66e4797c25#code) |
+| `evm/` | Sepolia | [`0xf687df77d865b651b1f212d0b61bbf66e4797c25`](https://sepolia.etherscan.io/address/0x4D9DE1bb481B9dA37A7a7E3a07F6f60654fEe7BB#code) |
 | `near-rs/` | NEAR Testnet | [`idos-dev-2.testnet`](https://explorer.testnet.near.org/accounts/idos-dev-2.testnet) |
 | `near-rs/` | NEAR Mainnet | [`idos-dev-2.near`](https://explorer.mainnet.near.org/accounts/idos-dev-2.near) |
 | `near-ts/` | NEAR Testnet | [`idos-dev-1.testnet`](https://explorer.testnet.near.org/accounts/idos-dev-1.testnet) |
@@ -36,9 +36,9 @@ The contract functionality is straightforward:
 
 ### Deploy to Sepolia
 
-1. Copy `.env` file to `.env.local`
-1. Set `SEPOLIA_NODE_URL` and `SEPOLIA_PRIVATE_KEY` env variables accordingly
+1. Copy `.env` file to `.env.local` and fill it in accordingly
 1. Run `npx hardhat --network sepolia run scripts/deploy.js`
+1. Run `npx hardhat --network sepolia verify $RESULTING_ADDRESS`
 
 ### Deploy to local chain
 
