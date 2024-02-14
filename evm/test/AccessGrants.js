@@ -46,15 +46,14 @@ describe("AccessGrants", function () {
       describe("By anybody through insertGrantBySignature", function () {
         it("Inserts grant", async function () {
           const { accessGrants, signer1: caller, signer2: owner, signer3: grantee } = await loadFixture(deployAndPopulateContractFixture);
+          const contract = accessGrants.connect(caller);
+
           const dataId = "849690b7-fee1-46d8-8c91-0268b0cc1850";
           const lockedUntil = 50n;
-          const digest = ethers.AbiCoder.defaultAbiCoder().encode(
-            ["address", "address", "string", "uint256"],
-            [owner.address, grantee.address, dataId, lockedUntil]
-          );
-          const signature = await owner.signMessage(ethers.getBytes(digest));
 
-          await accessGrants.connect(caller).insertGrantBySignature(owner.address, grantee.address, dataId, lockedUntil, signature);
+          const signature = await owner.signMessage(await contract.insertGrantBySignatureMessage(owner.address, grantee.address, dataId, lockedUntil));
+
+          await contract.insertGrantBySignature(owner.address, grantee.address, dataId, lockedUntil, signature);
           let grants = await accessGrants.findGrants(owner.address, grantee.address, dataId);
 
           expect(grants.length).to.equal(1);

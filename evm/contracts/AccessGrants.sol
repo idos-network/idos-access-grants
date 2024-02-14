@@ -3,6 +3,7 @@ pragma solidity =0.8.19;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract AccessGrants {
     using EnumerableSet for EnumerableSet.Bytes32Set;
@@ -38,6 +39,21 @@ contract AccessGrants {
         uint256         lockedUntil
     );
 
+    function insertGrantBySignatureMessage(
+        address owner,
+        address grantee,
+        string calldata dataId,
+        uint256 lockedUntil
+    ) public pure returns (string memory) {
+        return string.concat(
+            "operation: insertGrant", "\n",
+            "owner: ", Strings.toHexString(owner), "\n",
+            "grantee: ", Strings.toHexString(grantee), "\n",
+            "dataId: ", dataId, "\n",
+            "lockedUntil: ", Strings.toString(lockedUntil)
+        );
+    }
+
     function insertGrant(
         address grantee,
         string calldata dataId,
@@ -56,13 +72,13 @@ contract AccessGrants {
         require(
             SignatureChecker.isValidSignatureNow(
                 owner,
-                    ECDSA.toEthSignedMessageHash(
-                        abi.encode(
-                            owner,
-                            grantee,
-                            dataId,
-                            lockedUntil
-                        )
+                ECDSA.toEthSignedMessageHash(
+                    bytes(insertGrantBySignatureMessage(
+                        owner,
+                        grantee,
+                        dataId,
+                        lockedUntil
+                    ))
                 ),
                 signature
             ),
