@@ -21,18 +21,15 @@ The contract functionality is straightforward:
 | :- | :- | :- |
 | EVM | Solidity | [`evm/`](./evm) |
 | NEAR VM | Rust | [`near-rs/`](./near-rs) |
-| NEAR VM | TypeScript | [`near-ts/`](./near-ts) |
 
 **Deployments:**
 
 | Source | Chain | Address |
 | :- | :- | :- |
 | `evm/` | Goerli | [`0x5b7d9b546B34ceD8AE0A26b090E0fDbB70e7224f`](https://goerli.etherscan.io/address/0x5b7d9b546B34ceD8AE0A26b090E0fDbB70e7224f#code) |
-| `evm/` | Sepolia | [`0xf687df77d865b651b1f212d0b61bbf66e4797c25`](https://sepolia.etherscan.io/address/0x4D9DE1bb481B9dA37A7a7E3a07F6f60654fEe7BB#code) |
+| `evm/` | Sepolia | [`0x4D9DE1bb481B9dA37A7a7E3a07F6f60654fEe7BB`](https://sepolia.etherscan.io/address/0x4D9DE1bb481B9dA37A7a7E3a07F6f60654fEe7BB#code) |
 | `near-rs/` | NEAR Testnet | [`idos-dev-2.testnet`](https://explorer.testnet.near.org/accounts/idos-dev-2.testnet) |
 | `near-rs/` | NEAR Mainnet | [`idos-dev-2.near`](https://explorer.mainnet.near.org/accounts/idos-dev-2.near) |
-| `near-ts/` | NEAR Testnet | [`idos-dev-1.testnet`](https://explorer.testnet.near.org/accounts/idos-dev-1.testnet) |
-| `near-ts/` | NEAR Mainnet | [`idos-dev-1.near`](https://explorer.mainnet.near.org/accounts/idos-dev-1.near) |
 
 ### Deploy to Sepolia
 
