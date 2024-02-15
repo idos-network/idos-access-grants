@@ -98,7 +98,7 @@ describe("AccessGrants", function () {
 
         await expect(
           accessGrants.connect(grantee).deleteGrant(grantee, "some ID", lockedUntil)
-        ).to.be.revertedWith("No grants for sender");
+        ).to.be.revertedWith("No grants for owner");
 
         let grants = await accessGrants.findGrants(owner, grantee, "some ID");
 
@@ -189,6 +189,35 @@ describe("AccessGrants", function () {
 
             expect(grants.length).to.equal(3);
           });
+        });
+      });
+
+      describe("By anybody through deleteGrantBySignature", function () {
+        it("Delete grant", async function () {
+          const { accessGrants, signer1: caller, signer2: owner, signer3: grantee } = await loadFixture(deployAndPopulateContractFixture);
+          const dataId = "some data id";
+          const lockedUntil = 50;
+          await accessGrants.connect(owner).insertGrant(grantee, dataId, lockedUntil);
+          expect((await accessGrants.findGrants(owner.address, grantee.address, dataId)).length).to.equal(1);
+
+          const signature = await owner.signMessage(await accessGrants.deleteGrantBySignatureMessage(owner.address, grantee.address, dataId, lockedUntil));
+          await accessGrants.connect(caller).deleteGrantBySignature(owner.address, grantee.address, dataId, lockedUntil, signature);
+
+          expect((await accessGrants.findGrants(owner.address, grantee.address, dataId)).length).to.equal(0);
+        });
+
+        it("Fails when the signature is wrong", async function () {
+          const { accessGrants, signer1: caller, signer2: owner, signer3: grantee } = await loadFixture(deployAndPopulateContractFixture);
+          const dataId = "some data id";
+          const lockedUntil = 50;
+          await accessGrants.connect(owner).insertGrant(grantee, dataId, lockedUntil);
+          expect((await accessGrants.findGrants(owner.address, grantee.address, dataId)).length).to.equal(1);
+
+          const signature = "0x0badbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbad";
+
+          await expect(
+            accessGrants.connect(caller).deleteGrantBySignature(owner.address, grantee.address, dataId, lockedUntil, signature)
+          ).to.be.revertedWith("Signature doesn't match");
         });
       });
     });

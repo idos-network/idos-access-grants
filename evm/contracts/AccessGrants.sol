@@ -87,36 +87,52 @@ contract AccessGrants {
         _insertGrant(owner, grantee, dataId, lockedUntil);
     }
 
+    function deleteGrantBySignatureMessage(
+        address owner,
+        address grantee,
+        string calldata dataId,
+        uint256 lockedUntil
+    ) public pure returns (string memory) {
+        return string.concat(
+            "operation: deleteGrant", "\n",
+            "owner: ", Strings.toHexString(owner), "\n",
+            "grantee: ", Strings.toHexString(grantee), "\n",
+            "dataId: ", dataId, "\n",
+            "lockedUntil: ", Strings.toString(lockedUntil)
+        );
+    }
+
+    function deleteGrantBySignature(
+        address owner,
+        address grantee,
+        string calldata dataId,
+        uint256 lockedUntil,
+        bytes calldata signature
+    ) external {
+        require(
+            SignatureChecker.isValidSignatureNow(
+                owner,
+                ECDSA.toEthSignedMessageHash(
+                    bytes(deleteGrantBySignatureMessage(
+                        owner,
+                        grantee,
+                        dataId,
+                        lockedUntil
+                    ))
+                ),
+                signature
+            ),
+            "Signature doesn't match"
+        );
+         _deleteGrant(owner, grantee, dataId, lockedUntil);
+    }
+
     function deleteGrant(
         address grantee,
         string memory dataId,
         uint256 lockedUntil
     ) external {
-        Grant[] memory grants = findGrants(msg.sender, grantee, dataId);
-
-        require(grants.length > 0, "No grants for sender");
-
-        for (uint256 i = 0; i < grants.length; i++) {
-            Grant memory grant = grants[i];
-
-            if (lockedUntil == 0 || grants[i].lockedUntil == lockedUntil) {
-                require(grant.lockedUntil < block.timestamp, "Grant is timelocked");
-
-                bytes32 grantId = _deriveGrantId(grant);
-
-                delete _grantsById[grantId];
-                _grantIdsByOwner[grant.owner].remove(grantId);
-                _grantIdsByGrantee[grant.grantee].remove(grantId);
-                _grantIdsByDataId[grant.dataId].remove(grantId);
-
-                emit GrantDeleted(
-                    grant.owner,
-                    grant.grantee,
-                    grant.dataId,
-                    grant.lockedUntil
-                );
-            }
-        }
+         _deleteGrant(msg.sender, grantee, dataId, lockedUntil);
     }
 
     function grantsFor(
@@ -204,6 +220,39 @@ contract AccessGrants {
             grant.dataId,
             grant.lockedUntil
         );
+    }
+
+    function _deleteGrant(
+        address owner,
+        address grantee,
+        string memory dataId,
+        uint256 lockedUntil
+    ) private {
+        Grant[] memory grants = findGrants(owner, grantee, dataId);
+
+        require(grants.length > 0, "No grants for owner");
+
+        for (uint256 i = 0; i < grants.length; i++) {
+            Grant memory grant = grants[i];
+
+            if (lockedUntil == 0 || grants[i].lockedUntil == lockedUntil) {
+                require(grant.lockedUntil < block.timestamp, "Grant is timelocked");
+
+                bytes32 grantId = _deriveGrantId(grant);
+
+                delete _grantsById[grantId];
+                _grantIdsByOwner[grant.owner].remove(grantId);
+                _grantIdsByGrantee[grant.grantee].remove(grantId);
+                _grantIdsByDataId[grant.dataId].remove(grantId);
+
+                emit GrantDeleted(
+                    grant.owner,
+                    grant.grantee,
+                    grant.dataId,
+                    grant.lockedUntil
+                );
+            }
+        }
     }
 
     function _deriveGrantId(
