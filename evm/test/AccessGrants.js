@@ -24,21 +24,55 @@ describe("AccessGrants", function () {
 
   describe("Grant management", function () {
     describe("Creating grants", function () {
-      it("A grant can only be owned by its creator", async function () {
-        const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
+      describe("By owner through insertGrant", function () {
+        it("A grant can only be owned by its creator", async function () {
+          const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
 
-        let grants = await accessGrants.findGrants(owner, grantee, "1A");
+          let grants = await accessGrants.findGrants(owner, grantee, "1A");
 
-        expect(grants.length).to.equal(1);
-        expect(grants[0].owner).to.equal(owner.address);
+          expect(grants.length).to.equal(1);
+          expect(grants[0].owner).to.equal(owner.address);
+        });
+
+        it("A duplicate grant cannot be created", async function () {
+          const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
+
+          await expect(
+            accessGrants.connect(owner).insertGrant(grantee, "1A", NO_TIMELOCK)
+          ).to.be.revertedWith("Grant already exists");
+        });
       });
 
-      it("A duplicate grant cannot be created", async function () {
-        const { accessGrants, signer1: owner, signer2: grantee } = await loadFixture(deployAndPopulateContractFixture);
+      describe("By anybody through insertGrantBySignature", function () {
+        it("Inserts grant", async function () {
+          const { accessGrants, signer1: caller, signer2: owner, signer3: grantee } = await loadFixture(deployAndPopulateContractFixture);
+          const contract = accessGrants.connect(caller);
 
-        await expect(
-          accessGrants.connect(owner).insertGrant(grantee, "1A", NO_TIMELOCK)
-        ).to.be.revertedWith("Grant already exists");
+          const dataId = "849690b7-fee1-46d8-8c91-0268b0cc1850";
+          const lockedUntil = 50n;
+
+          const signature = await owner.signMessage(await contract.insertGrantBySignatureMessage(owner.address, grantee.address, dataId, lockedUntil));
+
+          await contract.insertGrantBySignature(owner.address, grantee.address, dataId, lockedUntil, signature);
+          let grants = await accessGrants.findGrants(owner.address, grantee.address, dataId);
+
+          expect(grants.length).to.equal(1);
+          expect(grants).to.eql([
+            [owner.address, grantee.address, dataId, lockedUntil],
+          ]);
+        });
+
+        it("Fails when the signature is wrong", async function () {
+          const { accessGrants, signer1: caller, signer2: owner, signer3: grantee } = await loadFixture(deployAndPopulateContractFixture);
+          const dataId = "849690b7-fee1-46d8-8c91-0268b0cc1850";
+          const lockedUntil = 50n;
+
+          const signature = "0xcda9acd962714be67a2b0fe14c4ffa5e51c2912f463f72a293d9157ccea1a31b15541a5e5dcf35e4bf6e3bb58b3e5ae569859cfd3c6272a8ff647d544f0cea061c";
+
+          await expect(
+            accessGrants.connect(caller).insertGrantBySignature(owner.address, grantee.address, dataId, lockedUntil, signature)
+          ).to.be.revertedWith("Signature doesn't match");
+        });
       });
     });
 
@@ -64,7 +98,7 @@ describe("AccessGrants", function () {
 
         await expect(
           accessGrants.connect(grantee).deleteGrant(grantee, "some ID", lockedUntil)
-        ).to.be.revertedWith("No grants for sender");
+        ).to.be.revertedWith("No grants for owner");
 
         let grants = await accessGrants.findGrants(owner, grantee, "some ID");
 
@@ -155,6 +189,35 @@ describe("AccessGrants", function () {
 
             expect(grants.length).to.equal(3);
           });
+        });
+      });
+
+      describe("By anybody through deleteGrantBySignature", function () {
+        it("Delete grant", async function () {
+          const { accessGrants, signer1: caller, signer2: owner, signer3: grantee } = await loadFixture(deployAndPopulateContractFixture);
+          const dataId = "some data id";
+          const lockedUntil = 50;
+          await accessGrants.connect(owner).insertGrant(grantee, dataId, lockedUntil);
+          expect((await accessGrants.findGrants(owner.address, grantee.address, dataId)).length).to.equal(1);
+
+          const signature = await owner.signMessage(await accessGrants.deleteGrantBySignatureMessage(owner.address, grantee.address, dataId, lockedUntil));
+          await accessGrants.connect(caller).deleteGrantBySignature(owner.address, grantee.address, dataId, lockedUntil, signature);
+
+          expect((await accessGrants.findGrants(owner.address, grantee.address, dataId)).length).to.equal(0);
+        });
+
+        it("Fails when the signature is wrong", async function () {
+          const { accessGrants, signer1: caller, signer2: owner, signer3: grantee } = await loadFixture(deployAndPopulateContractFixture);
+          const dataId = "some data id";
+          const lockedUntil = 50;
+          await accessGrants.connect(owner).insertGrant(grantee, dataId, lockedUntil);
+          expect((await accessGrants.findGrants(owner.address, grantee.address, dataId)).length).to.equal(1);
+
+          const signature = "0x0badbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbad";
+
+          await expect(
+            accessGrants.connect(caller).deleteGrantBySignature(owner.address, grantee.address, dataId, lockedUntil, signature)
+          ).to.be.revertedWith("Signature doesn't match");
         });
       });
     });
@@ -336,5 +399,52 @@ describe("AccessGrants", function () {
         });
       });
     });
+  });
+
+  describe("Events", function () {
+    describe("when a grant inserted", function () {
+      it("Creates GrantAdded event", async function () {
+        const { accessGrants, signer1: caller, signer2: owner, signer3: grantee } = await loadFixture(deployAndPopulateContractFixture);
+        const dataId = "849690b7-fee1-46d8-8c91-0268b0cc1850";
+        const lockedUntil = 50n;
+        await accessGrants.connect(owner).insertGrant(grantee, dataId, lockedUntil);
+
+        const eventTopic = ethers.id("GrantAdded(address,address,string,uint256)");
+        const logs = await ethers.provider.getLogs({
+          address: accessGrants.address,
+          topics: [
+            eventTopic,
+            ethers.zeroPadValue(owner.address, 32),
+            ethers.zeroPadValue(grantee.address, 32),
+            ethers.keccak256(ethers.toUtf8Bytes(dataId)),
+          ],
+        });
+        expect(logs.length).to.equal(1);
+        expect(logs[0].data).to.equal(lockedUntil);
+      });
+    });
+    describe("when a grant deleted", function () {
+      it("Creates GrantDeleted event", async function () {
+        const { accessGrants, signer1: caller, signer2: owner, signer3: grantee } = await loadFixture(deployAndPopulateContractFixture);
+        const dataId = "849690b7-fee1-46d8-8c91-0268b0cc1850";
+        const lockedUntil = 50n;
+        await accessGrants.connect(owner).insertGrant(grantee, dataId, lockedUntil);
+        await accessGrants.connect(owner).deleteGrant(grantee, dataId, lockedUntil);
+
+        const eventTopic = ethers.id("GrantDeleted(address,address,string,uint256)");
+        const logs = await ethers.provider.getLogs({
+          address: accessGrants.address,
+          topics: [
+            eventTopic,
+            ethers.zeroPadValue(owner.address, 32),
+            ethers.zeroPadValue(grantee.address, 32),
+            ethers.keccak256(ethers.toUtf8Bytes(dataId)),
+          ],
+        });
+        expect(logs.length).to.equal(1);
+        expect(logs[0].data).to.equal(lockedUntil);
+      });
+    });
+
   });
 });

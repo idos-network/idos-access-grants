@@ -26,10 +26,23 @@ The contract functionality is straightforward:
 
 | Source | Chain | Address |
 | :- | :- | :- |
-| `evm/` | Goerli | [`0x5b7d9b546B34ceD8AE0A26b090E0fDbB70e7224f`](https://goerli.etherscan.io/address/0x5b7d9b546B34ceD8AE0A26b090E0fDbB70e7224f#code) |
-| `evm/` | Sepolia | [`0x032b8275B13D3aEef180d13e29287535aCB667Ef`](https://sepolia.etherscan.io/address/0x032b8275B13D3aEef180d13e29287535aCB667Ef#code) |
+| `evm/` | Sepolia | [`0x73de8f45c0dFDf59C56a93B483246AC113a1f922`](https://sepolia.etherscan.io/address/0x73de8f45c0dFDf59C56a93B483246AC113a1f922#code) |
 | `near-rs/` | NEAR Testnet | [`idos-dev-2.testnet`](https://explorer.testnet.near.org/accounts/idos-dev-2.testnet) |
 | `near-rs/` | NEAR Mainnet | [`idos-dev-2.near`](https://explorer.mainnet.near.org/accounts/idos-dev-2.near) |
+
+### Deploy to Sepolia
+
+1. Copy `.env` file to `.env.local` and fill it in accordingly
+1. Run `npx hardhat --network sepolia run scripts/deploy.js`
+1. Run `npx hardhat --network sepolia verify $RESULTING_ADDRESS`
+
+### Deploy to local chain
+
+Use [hardhat](https://hardhat.org/) to run local node.
+1. Run node in separate process `npx hardhat node`
+1. Compile a contract `npx hardhat compile`
+1. Deploy the contract `npx hardhat --network locahost run scripts/deploy.js`
+
 
 ## Interface
 
