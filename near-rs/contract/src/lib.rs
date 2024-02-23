@@ -45,7 +45,10 @@ fn derive_grant_id_example() {
 pub fn derive_grant_id(grant: &Grant) -> String {
     let id = format!(
         "{}{}{}{}",
-        grant.owner, Into::<String>::into(&grant.grantee), grant.data_id, grant.locked_until,
+        grant.owner,
+        Into::<String>::into(&grant.grantee),
+        grant.data_id,
+        grant.locked_until,
     );
 
     hex::encode(env::keccak256(id.as_bytes()))
@@ -72,7 +75,7 @@ fn get_push_insert<K: BorshSerialize, V: BorshDeserialize + BorshSerialize + Clo
     key: &K,
     value: &V,
 ) {
-    let mut value_vec = collection.get(key).unwrap_or(vec![]);
+    let mut value_vec = collection.get(key).unwrap_or_default();
     value_vec.push(value.clone());
     collection.insert(key, &value_vec);
 }
@@ -120,17 +123,20 @@ impl FractalRegistry {
         get_push_insert(&mut self.grant_ids_by_grantee, &grantee, &grant_id);
         get_push_insert(&mut self.grant_ids_by_data_id, &data_id, &grant_id);
 
-        env::log_str(&format!("EVENT_JSON:{}", json!({
-            "standard": "FractalRegistry",
-            "version": "0",
-            "event": "grant_inserted",
-            "data": {
-                "owner": owner,
-                "grantee": grantee,
-                "data_id": data_id,
-                "locked_until": locked_until.unwrap_or(0),
-            },
-        })))
+        env::log_str(&format!(
+            "EVENT_JSON:{}",
+            json!({
+                "standard": "FractalRegistry",
+                "version": "0",
+                "event": "grant_inserted",
+                "data": {
+                    "owner": owner,
+                    "grantee": grantee,
+                    "data_id": data_id,
+                    "locked_until": locked_until.unwrap_or(0),
+                },
+            })
+        ))
     }
 
     pub fn delete_grant(
@@ -167,17 +173,20 @@ impl FractalRegistry {
             remove_values(&mut self.grant_ids_by_data_id, &data_id, &grant_id);
         });
 
-        env::log_str(&format!("EVENT_JSON:{}", json!({
-            "standard": "FractalRegistry",
-            "version": "0",
-            "event": "grant_deleted",
-            "data": {
-                "owner": owner,
-                "grantee": grantee,
-                "data_id": data_id,
-                "locked_until": locked_until.unwrap_or(0),
-            },
-        })))
+        env::log_str(&format!(
+            "EVENT_JSON:{}",
+            json!({
+                "standard": "FractalRegistry",
+                "version": "0",
+                "event": "grant_deleted",
+                "data": {
+                    "owner": owner,
+                    "grantee": grantee,
+                    "data_id": data_id,
+                    "locked_until": locked_until.unwrap_or(0),
+                },
+            })
+        ))
     }
 
     pub fn grants_for(&self, grantee: PublicKey, data_id: String) -> Vec<Grant> {
@@ -198,15 +207,15 @@ impl FractalRegistry {
         );
 
         if let Some(owner) = owner {
-            grant_id_searches.push(self.grant_ids_by_owner.get(&owner).unwrap_or(vec![]));
+            grant_id_searches.push(self.grant_ids_by_owner.get(&owner).unwrap_or_default());
         }
 
         if let Some(grantee) = grantee {
-            grant_id_searches.push(self.grant_ids_by_grantee.get(&grantee).unwrap_or(vec![]));
+            grant_id_searches.push(self.grant_ids_by_grantee.get(&grantee).unwrap_or_default());
         }
 
         if let Some(data_id) = data_id {
-            grant_id_searches.push(self.grant_ids_by_data_id.get(&data_id).unwrap_or(vec![]));
+            grant_id_searches.push(self.grant_ids_by_data_id.get(&data_id).unwrap_or_default());
         }
 
         let Some((head, tail)) = grant_id_searches.split_first() else {
