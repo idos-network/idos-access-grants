@@ -84,6 +84,17 @@ async fn test_everything(
         .transact()
         .await?;
     assert!(result.is_success());
+    assert_eq!(result.logs(), [format!("EVENT_JSON:{}", json!({
+        "standard": "FractalRegistry",
+        "version": "0",
+        "event": "grant_inserted",
+        "data": {
+            "owner": test_account_id,
+            "grantee": bob,
+            "data_id": "A1",
+            "locked_until": 0,
+        },
+    }))]);
 
     result = test_account
         .call(contract.id(), "insert_grant")
@@ -253,6 +264,17 @@ async fn test_everything(
         .transact()
         .await?;
     assert!(result.is_success());
+    assert_eq!(result.logs(), [format!("EVENT_JSON:{}", json!({
+        "standard": "FractalRegistry",
+        "version": "0",
+        "event": "grant_deleted",
+        "data": {
+            "owner": test_account_id,
+            "grantee": bob,
+            "data_id": "A1",
+            "locked_until": 0,
+        },
+    }))]);
 
     grants = test_account
         .call(contract.id(), "find_grants")

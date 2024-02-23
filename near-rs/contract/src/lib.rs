@@ -2,6 +2,7 @@ extern crate near_sdk;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
 use near_sdk::serde::Serialize;
+use near_sdk::serde_json::json;
 use near_sdk::{env, near_bindgen, require, AccountId, EpochHeight, PublicKey};
 
 #[near_bindgen]
@@ -118,6 +119,18 @@ impl FractalRegistry {
         get_push_insert(&mut self.grant_ids_by_owner, &owner, &grant_id);
         get_push_insert(&mut self.grant_ids_by_grantee, &grantee, &grant_id);
         get_push_insert(&mut self.grant_ids_by_data_id, &data_id, &grant_id);
+
+        env::log_str(&format!("EVENT_JSON:{}", json!({
+            "standard": "FractalRegistry",
+            "version": "0",
+            "event": "grant_inserted",
+            "data": {
+                "owner": owner,
+                "grantee": grantee,
+                "data_id": data_id,
+                "locked_until": locked_until.unwrap_or(0),
+            },
+        })))
     }
 
     pub fn delete_grant(
@@ -153,6 +166,18 @@ impl FractalRegistry {
             remove_values(&mut self.grant_ids_by_grantee, &grantee, &grant_id);
             remove_values(&mut self.grant_ids_by_data_id, &data_id, &grant_id);
         });
+
+        env::log_str(&format!("EVENT_JSON:{}", json!({
+            "standard": "FractalRegistry",
+            "version": "0",
+            "event": "grant_deleted",
+            "data": {
+                "owner": owner,
+                "grantee": grantee,
+                "data_id": data_id,
+                "locked_until": locked_until.unwrap_or(0),
+            },
+        })))
     }
 
     pub fn grants_for(&self, grantee: PublicKey, data_id: String) -> Vec<Grant> {
