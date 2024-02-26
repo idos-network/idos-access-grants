@@ -1,14 +1,18 @@
 [package]
 name = "access_grants"
-version = "1.0.0"
+version = "1.0.1"
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
+near-sdk = "5.0.0"
+# I don't know why I need to declare a direct dep to borsh, but that's what it took to compile.
+borsh = "*"
 hex = "0.4.3"
-near-sdk = "4.0.0"
-uint = { version = "0.9.3", default-features = false }
+
+[dev-dependencies]
+near-sdk = { version = "5.0.0", features = ["unit-testing"] }
 
 [profile.release]
 codegen-units = 1
