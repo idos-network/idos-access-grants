@@ -1,8 +1,8 @@
 extern crate near_sdk;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::LookupMap;
 use near_sdk::serde::Serialize;
 use near_sdk::serde_json::json;
+use near_sdk::store::LookupMap;
 use near_sdk::{env, near_bindgen, require, AccountId, EpochHeight, PublicKey};
 
 #[near_bindgen]
@@ -70,29 +70,6 @@ impl Default for FractalRegistry {
     }
 }
 
-fn get_push_insert<K: BorshSerialize, V: BorshDeserialize + BorshSerialize + Clone>(
-    collection: &mut LookupMap<K, Vec<V>>,
-    key: &K,
-    value: &V,
-) {
-    let mut value_vec = collection.get(key).unwrap_or_default();
-    value_vec.push(value.clone());
-    collection.insert(key, &value_vec);
-}
-
-fn remove_values<
-    K: BorshSerialize,
-    V: BorshDeserialize + BorshSerialize + Clone + std::cmp::PartialEq<V>,
->(
-    collection: &mut LookupMap<K, Vec<V>>,
-    key: &K,
-    value: &V,
-) {
-    let mut value_vec = collection.get(key).unwrap();
-    value_vec.retain(|id| *id != *value);
-    collection.insert(key, &value_vec);
-}
-
 #[near_bindgen]
 impl FractalRegistry {
     pub fn insert_grant(
@@ -117,11 +94,22 @@ impl FractalRegistry {
             "Grant already exists"
         );
 
-        self.grants_by_id.insert(&grant_id, &grant);
+        self.grants_by_id.insert(grant_id.clone(), grant);
 
-        get_push_insert(&mut self.grant_ids_by_owner, &owner, &grant_id);
-        get_push_insert(&mut self.grant_ids_by_grantee, &grantee, &grant_id);
-        get_push_insert(&mut self.grant_ids_by_data_id, &data_id, &grant_id);
+        self.grant_ids_by_owner
+            .entry(owner.clone())
+            .or_default()
+            .push(grant_id.clone());
+
+        self.grant_ids_by_grantee
+            .entry(grantee.clone())
+            .or_default()
+            .push(grant_id.clone());
+
+        self.grant_ids_by_data_id
+            .entry(data_id.clone())
+            .or_default()
+            .push(grant_id.clone());
 
         env::log_str(&format!(
             "EVENT_JSON:{}",
@@ -168,9 +156,20 @@ impl FractalRegistry {
 
             self.grants_by_id.remove(&grant_id);
 
-            remove_values(&mut self.grant_ids_by_owner, &owner, &grant_id);
-            remove_values(&mut self.grant_ids_by_grantee, &grantee, &grant_id);
-            remove_values(&mut self.grant_ids_by_data_id, &data_id, &grant_id);
+            self.grant_ids_by_owner
+                .get_mut(&owner)
+                .unwrap_or(&mut vec![])
+                .retain(|id| *id != *grant_id);
+
+            self.grant_ids_by_grantee
+                .get_mut(&grantee)
+                .unwrap_or(&mut vec![])
+                .retain(|id| *id != *grant_id);
+
+            self.grant_ids_by_data_id
+                .get_mut(&data_id)
+                .unwrap_or(&mut vec![])
+                .retain(|id| *id != *grant_id);
         });
 
         env::log_str(&format!(
@@ -206,16 +205,17 @@ impl FractalRegistry {
             "Required argument: `owner` and/or `grantee`",
         );
 
+        let empty = vec![];
         if let Some(owner) = owner {
-            grant_id_searches.push(self.grant_ids_by_owner.get(&owner).unwrap_or_default());
+            grant_id_searches.push(self.grant_ids_by_owner.get(&owner).unwrap_or(&empty));
         }
 
         if let Some(grantee) = grantee {
-            grant_id_searches.push(self.grant_ids_by_grantee.get(&grantee).unwrap_or_default());
+            grant_id_searches.push(self.grant_ids_by_grantee.get(&grantee).unwrap_or(&empty));
         }
 
         if let Some(data_id) = data_id {
-            grant_id_searches.push(self.grant_ids_by_data_id.get(&data_id).unwrap_or_default());
+            grant_id_searches.push(self.grant_ids_by_data_id.get(&data_id).unwrap_or(&empty));
         }
 
         let Some((head, tail)) = grant_id_searches.split_first() else {
@@ -224,7 +224,7 @@ impl FractalRegistry {
 
         head.iter()
             .filter(|id| tail.iter().all(|s| s.contains(id)))
-            .map(|id| self.grants_by_id.get(id).unwrap())
+            .map(|id| self.grants_by_id.get(id).unwrap().clone())
             .collect()
     }
 }
