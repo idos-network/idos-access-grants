@@ -1,7 +1,6 @@
 extern crate near_sdk;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::serde::Serialize;
-use near_sdk::serde_json::json;
 use near_sdk::store::LookupMap;
 use near_sdk::{env, near_bindgen, require, EpochHeight, PublicKey};
 
@@ -74,6 +73,25 @@ impl Default for FractalRegistry {
     }
 }
 
+#[near_bindgen(event_json(standard = "FractalRegistry"))]
+pub enum FractalRegistryEvents {
+    #[event_version("0")]
+    GrantInserted {
+        owner: PublicKey,
+        grantee: PublicKey,
+        data_id: String,
+        locked_until: EpochHeight,
+    },
+
+    #[event_version("0")]
+    GrantDeleted {
+        owner: PublicKey,
+        grantee: PublicKey,
+        data_id: String,
+        locked_until: EpochHeight,
+    },
+}
+
 #[near_bindgen]
 impl FractalRegistry {
     pub fn insert_grant(
@@ -115,20 +133,15 @@ impl FractalRegistry {
             .or_default()
             .push(grant_id.clone());
 
-        env::log_str(&format!(
-            "EVENT_JSON:{}",
-            json!({
-                "standard": "FractalRegistry",
-                "version": "0",
-                "event": "grant_inserted",
-                "data": {
-                    "owner": owner,
-                    "grantee": grantee,
-                    "data_id": data_id,
-                    "locked_until": locked_until.unwrap_or(0),
-                },
-            })
-        ))
+        let locked_until = locked_until.unwrap_or(0);
+
+        FractalRegistryEvents::GrantInserted {
+            owner,
+            grantee,
+            data_id,
+            locked_until,
+        }
+        .emit();
     }
 
     pub fn delete_grant(
@@ -176,20 +189,15 @@ impl FractalRegistry {
                 .retain(|id| *id != *grant_id);
         });
 
-        env::log_str(&format!(
-            "EVENT_JSON:{}",
-            json!({
-                "standard": "FractalRegistry",
-                "version": "0",
-                "event": "grant_deleted",
-                "data": {
-                    "owner": owner,
-                    "grantee": grantee,
-                    "data_id": data_id,
-                    "locked_until": locked_until.unwrap_or(0),
-                },
-            })
-        ))
+        let locked_until = locked_until.unwrap_or(0);
+
+        FractalRegistryEvents::GrantDeleted {
+            owner,
+            grantee,
+            data_id,
+            locked_until,
+        }
+        .emit();
     }
 
     pub fn grants_for(&self, grantee: PublicKey, data_id: String) -> Vec<Grant> {

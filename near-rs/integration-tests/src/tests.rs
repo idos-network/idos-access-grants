@@ -25,6 +25,21 @@ async fn create_public_key() -> anyhow::Result<String> {
     )))
 }
 
+const EVENT_JSON_PREFIX: &'static str = "EVENT_JSON";
+const EVENT_JSON_SEPARATOR: &'static str = ":";
+fn extract_event(s: &str) -> serde_json::Value {
+    if let Some((EVENT_JSON_PREFIX, json_str)) = s.split_once(EVENT_JSON_SEPARATOR) {
+        if let Ok(json_value) = json_str.parse::<serde_json::Value>() {
+            return json_value;
+        }
+    }
+
+    panic!(
+        "Expected {:?} to start with {:?}, followed by {:?} and a valid JSON value.",
+        s, EVENT_JSON_PREFIX, EVENT_JSON_SEPARATOR
+    )
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let wasm_arg: &str = &(env::args().nth(1).unwrap());
@@ -84,22 +99,20 @@ async fn test_everything(
         .transact()
         .await?;
     assert!(result.is_success());
+    assert_eq!(result.logs().len(), 1);
     assert_eq!(
-        result.logs(),
-        [format!(
-            "EVENT_JSON:{}",
-            json!({
-                "standard": "FractalRegistry",
-                "version": "0",
-                "event": "grant_inserted",
-                "data": {
-                    "owner": test_public_key,
-                    "grantee": bob,
-                    "data_id": "A1",
-                    "locked_until": 0,
-                },
-            })
-        )]
+        extract_event(result.logs()[0]),
+        json!({
+            "standard": "FractalRegistry",
+            "version": "0",
+            "event": "grant_inserted",
+            "data": {
+                "owner": test_public_key,
+                "grantee": bob,
+                "data_id": "A1",
+                "locked_until": 0,
+            },
+        }),
     );
 
     result = test_account
@@ -270,22 +283,20 @@ async fn test_everything(
         .transact()
         .await?;
     assert!(result.is_success());
+    assert_eq!(result.logs().len(), 1);
     assert_eq!(
-        result.logs(),
-        [format!(
-            "EVENT_JSON:{}",
-            json!({
-                "standard": "FractalRegistry",
-                "version": "0",
-                "event": "grant_deleted",
-                "data": {
-                    "owner": test_public_key,
-                    "grantee": bob,
-                    "data_id": "A1",
-                    "locked_until": 0,
-                },
-            })
-        )]
+        extract_event(result.logs()[0]),
+        json!({
+            "standard": "FractalRegistry",
+            "version": "0",
+            "event": "grant_deleted",
+            "data": {
+                "owner": test_public_key,
+                "grantee": bob,
+                "data_id": "A1",
+                "locked_until": 0,
+            },
+        })
     );
 
     grants = test_account
