@@ -1,8 +1,13 @@
+// The `#[near_bindgen]` for `impl FractalRegistry` was triggering this, and I couldn't find a way to suppress it.
+#![allow(clippy::too_many_arguments)]
 extern crate near_sdk;
+
+use std::convert::TryInto;
+
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::serde::Serialize;
 use near_sdk::store::LookupMap;
-use near_sdk::{env, near_bindgen, require, EpochHeight, PublicKey};
+use near_sdk::{env, near_bindgen, require, CurveType, EpochHeight, PublicKey};
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize)]
@@ -73,6 +78,67 @@ impl Default for FractalRegistry {
     }
 }
 
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Clone)]
+#[serde(crate = "near_sdk::serde")]
+struct Nep413Payload {
+    pub message: String,
+    pub nonce: [u8; 32],
+    pub recipient: String,
+    #[serde(rename = "callbackUrl")]
+    pub callback_url: Option<String>,
+}
+
+const NEP413_TAG: u32 = 2147484061; // 2**31 + 413
+fn nep413_hashed_payload(payload: &Nep413Payload) -> [u8; 32] {
+    let mut writer = vec![];
+
+    borsh::to_writer(&mut writer, &NEP413_TAG).expect("Can't borsh encode NEP413_TAG");
+    borsh::to_writer(&mut writer, payload).expect("Can't borsh encode payload");
+
+    env::sha256_array(&writer)
+}
+
+// Just so people don't pass in the wrong name for the message.
+macro_rules! u8_to_fixed_length_array {
+    ( $value:expr ) => {
+        __u8_to_fixed_length_array($value, stringify!($value))
+    };
+}
+
+fn __u8_to_fixed_length_array<'a, const N: usize>(
+    source: &'a [u8],
+    name: &'static str,
+) -> &'a [u8; N] {
+    source.try_into().unwrap_or_else(|_| {
+        panic!(
+            "{} doesn't seem to have exactly {} bytes: {:?}",
+            name, N, source
+        )
+    })
+}
+
+#[cfg(test)]
+#[test]
+fn u8_to_fixed_length_array_example_good() {
+    assert_eq!(
+        [1, 2, 3],
+        *u8_to_fixed_length_array!(vec![1, 2, 3].as_slice())
+    );
+}
+
+#[cfg(test)]
+#[test]
+#[should_panic(expected = "original.as_slice() doesn't seem to have exactly 1 bytes: [1, 2, 3]")]
+fn u8_to_fixed_length_array_example_bad() {
+    let original = vec![1, 2, 3];
+    let _var_name: [u8; 1] = *u8_to_fixed_length_array!(original.as_slice());
+}
+
+pub fn public_key_bytes_ref(public_key: &PublicKey) -> &[u8; 32] {
+    // First byte is the curve type.
+    u8_to_fixed_length_array!(&public_key.as_bytes()[1..])
+}
+
 #[near_bindgen(event_json(standard = "FractalRegistry"))]
 pub enum FractalRegistryEvents {
     #[event_version("0")]
@@ -100,8 +166,84 @@ impl FractalRegistry {
         data_id: String,
         locked_until: Option<EpochHeight>,
     ) {
-        let owner = env::signer_account_pk();
+        self._insert_grant(env::signer_account_pk(), grantee, data_id, locked_until)
+    }
 
+    pub fn insert_grant_by_signature_message(
+        &self,
+        owner: PublicKey,
+        grantee: PublicKey,
+        data_id: String,
+        locked_until: Option<EpochHeight>,
+    ) -> String {
+        format!(
+            "operation: insertGrant\n\
+            owner: {}\n\
+            grantee: {}\n\
+            dataId: {}\n\
+            lockedUntil: {}",
+            Into::<String>::into(&owner),
+            Into::<String>::into(&grantee),
+            data_id,
+            locked_until.unwrap_or(0)
+        )
+    }
+
+    pub fn grant_message_recipient(&self) -> String {
+        "idos.network".into()
+    }
+
+    pub fn insert_grant_by_signature(
+        &mut self,
+        owner: PublicKey,
+        grantee: PublicKey,
+        data_id: String,
+        locked_until: Option<EpochHeight>,
+        nonce: Vec<u8>,
+        signature: Vec<u8>,
+    ) {
+        require!(
+            owner.curve_type() == CurveType::ED25519,
+            "Only ed25519 keys are supported",
+        );
+
+        // Serde didn't have [u8; 64] implemented, only up to 32. So, I've decided to convert them inside the function.
+        let nonce: [u8; 32] = *u8_to_fixed_length_array!(nonce.as_slice());
+        let signature: [u8; 64] = *u8_to_fixed_length_array!(signature.as_slice());
+
+        let message = self.insert_grant_by_signature_message(
+            owner.clone(),
+            grantee.clone(),
+            data_id.clone(),
+            locked_until,
+        );
+
+        let hashed_payload = nep413_hashed_payload(&Nep413Payload {
+            message,
+            nonce,
+            recipient: self.grant_message_recipient(),
+            callback_url: None,
+        });
+
+        require!(
+            env::ed25519_verify(
+                &signature,
+                &hashed_payload,
+                public_key_bytes_ref(&owner),
+            ),
+            "Signature doesn't match"
+        );
+
+        self._insert_grant(owner, grantee, data_id, locked_until)
+    }
+
+    fn _insert_grant(
+        &mut self,
+        owner: PublicKey,
+        grantee: PublicKey,
+        data_id: String,
+        locked_until: Option<EpochHeight>,
+    ) {
         let grant = Grant {
             owner: owner.clone(),
             grantee: grantee.clone(),

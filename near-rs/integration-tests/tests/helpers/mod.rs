@@ -13,29 +13,16 @@ pub struct Grant {
     pub locked_until: u128,
 }
 
+pub fn create_secret_key() -> SecretKey {
+    SecretKey::from_random(near_workspaces::types::KeyType::ED25519)
+}
+
 pub fn extract_public_key(secret_key: &SecretKey) -> String {
     secret_key.public_key().to_string()
 }
 
 pub fn create_public_key() -> String {
-    extract_public_key(&SecretKey::from_random(
-        near_workspaces::types::KeyType::ED25519,
-    ))
-}
-
-const EVENT_JSON_PREFIX: &'static str = "EVENT_JSON";
-const EVENT_JSON_SEPARATOR: &'static str = ":";
-pub fn extract_event(s: &str) -> serde_json::Value {
-    if let Some((EVENT_JSON_PREFIX, json_str)) = s.split_once(EVENT_JSON_SEPARATOR) {
-        if let Ok(json_value) = json_str.parse::<serde_json::Value>() {
-            return json_value;
-        }
-    }
-
-    panic!(
-        "Expected {:?} to start with {:?}, followed by {:?} and a valid JSON value.",
-        s, EVENT_JSON_PREFIX, EVENT_JSON_SEPARATOR
-    )
+    extract_public_key(&create_secret_key())
 }
 
 lazy_static! {
