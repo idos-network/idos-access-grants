@@ -5,7 +5,7 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
-use near_workspaces::{types::SecretKey, Account, Contract};
+use near_workspaces::{network::Sandbox, types::SecretKey, Account, Contract, Worker};
 use serde::Deserialize;
 use serde_json::json;
 
@@ -50,12 +50,9 @@ lazy_static! {
     };
 }
 
-#[tokio::test]
-async fn test_main() -> anyhow::Result<()> {
+async fn scenario_base() -> anyhow::Result<(Worker<Sandbox>, Contract, Account)> {
     let worker = near_workspaces::sandbox().await?;
     let contract = worker.dev_deploy(&WASM).await?;
-
-    // create accounts
     let test_account = worker
         .dev_create_account()
         .await?
@@ -63,29 +60,16 @@ async fn test_main() -> anyhow::Result<()> {
         .transact()
         .await?
         .into_result()?;
-
-    // begin tests
-    everything(
-        &contract,
-        &test_account,
-        &create_public_key()?,
-        &create_public_key()?,
-        &create_public_key()?,
-        &create_public_key()?,
-    )
-    .await?;
-
-    Ok(())
+    Ok((worker, contract, test_account))
 }
 
-async fn everything(
-    contract: &Contract,
-    test_account: &Account,
-    bob: &str,
-    charlie: &str,
-    dave: &str,
-    eve: &str,
-) -> anyhow::Result<()> {
+#[tokio::test]
+async fn test_everything() -> anyhow::Result<()> {
+    let (_, contract, test_account) = scenario_base().await?;
+    let bob: &str = &create_public_key()?;
+    let charlie: &str = &create_public_key()?;
+    let dave: &str = &create_public_key()?;
+    let eve: &str = &create_public_key()?;
     let mut result;
     let mut grants;
     let test_public_key: String = test_account.secret_key().public_key().to_string();
