@@ -17,7 +17,8 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3.11", features = ["env-filter"] }
 near-workspaces = "0.8.0"
 pkg-config = "0.3.1"
+lazy_static = "1.4.0"
 
 [[example]]
 name = "integration-tests"
-path = "src/tests.rs"
+path = "empty.rs"

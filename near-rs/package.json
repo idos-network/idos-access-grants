@@ -8,7 +8,7 @@
     "build:contract": "cd contract && ./build.sh",
     "test": "yarn test:unit && yarn test:integration",
     "test:unit": "cd contract && cargo test",
-    "test:integration": "yarn build:contract && cd integration-tests && cargo run --example integration-tests \"../contract/target/wasm32-unknown-unknown/release/access_grants.wasm\"",
+    "test:integration": "yarn build:contract && cd integration-tests && CONTRACT_LOCATION=\"../contract/target/wasm32-unknown-unknown/release/access_grants.wasm\" cargo test",
     "postinstall": "echo no frontend && echo rs tests && echo rs contract"
   },
   "devDependencies": {

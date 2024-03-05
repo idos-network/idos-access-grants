@@ -1,3 +1,5 @@
+use lazy_static::lazy_static;
+
 use std::{
     env, fs,
     time::{Duration, SystemTime, UNIX_EPOCH},
@@ -19,7 +21,7 @@ fn extract_public_key(secret_key: &SecretKey) -> String {
     secret_key.public_key().to_string()
 }
 
-async fn create_public_key() -> anyhow::Result<String> {
+fn create_public_key() -> anyhow::Result<String> {
     Ok(extract_public_key(&SecretKey::from_random(
         near_workspaces::types::KeyType::ED25519,
     )))
@@ -40,14 +42,18 @@ fn extract_event(s: &str) -> serde_json::Value {
     )
 }
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    let wasm_arg: &str = &(env::args().nth(1).unwrap());
-    let wasm_filepath = fs::canonicalize(env::current_dir()?.join(wasm_arg))?;
+lazy_static! {
+    static ref WASM: Vec<u8> = {
+        let wasm_arg: String = env::var("CONTRACT_LOCATION").unwrap_or("../contract/target/wasm32-unknown-unknown/release/access_grants.wasm".into());
+        let wasm_filepath = fs::canonicalize(env::current_dir().unwrap().join(wasm_arg)).unwrap();
+        std::fs::read(wasm_filepath).unwrap()
+    };
+}
 
+#[tokio::test]
+async fn test_main() -> anyhow::Result<()> {
     let worker = near_workspaces::sandbox().await?;
-    let wasm = std::fs::read(wasm_filepath)?;
-    let contract = worker.dev_deploy(&wasm).await?;
+    let contract = worker.dev_deploy(&WASM).await?;
 
     // create accounts
     let test_account = worker
@@ -59,20 +65,20 @@ async fn main() -> anyhow::Result<()> {
         .into_result()?;
 
     // begin tests
-    test_everything(
+    everything(
         &contract,
         &test_account,
-        &create_public_key().await?,
-        &create_public_key().await?,
-        &create_public_key().await?,
-        &create_public_key().await?,
+        &create_public_key()?,
+        &create_public_key()?,
+        &create_public_key()?,
+        &create_public_key()?,
     )
     .await?;
 
     Ok(())
 }
 
-async fn test_everything(
+async fn everything(
     contract: &Contract,
     test_account: &Account,
     bob: &str,

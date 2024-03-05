@@ -1650,6 +1650,7 @@ version = "1.0.0"
 dependencies = [
  "anyhow",
  "borsh 0.9.3",
+ "lazy_static",
  "maplit",
  "near-units",
  "near-workspaces",
