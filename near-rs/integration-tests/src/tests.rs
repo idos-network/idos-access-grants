@@ -67,7 +67,7 @@ async fn test_everything(
 ) -> anyhow::Result<()> {
     let mut result;
     let mut grants;
-    let test_account_id: &str = test_account.id();
+    let test_public_key: String = test_account.secret_key().public_key().to_string();
 
     grants = test_account
         .call(contract.id(), "find_grants")
@@ -93,7 +93,7 @@ async fn test_everything(
                 "version": "0",
                 "event": "grant_inserted",
                 "data": {
-                    "owner": test_account_id,
+                    "owner": test_public_key,
                     "grantee": bob,
                     "data_id": "A1",
                     "locked_until": 0,
@@ -134,7 +134,7 @@ async fn test_everything(
 
     grants = test_account
         .call(contract.id(), "find_grants")
-        .args_json(json!({ "owner": test_account_id }))
+        .args_json(json!({ "owner": test_public_key }))
         .view()
         .await?
         .json::<Vec<Grant>>()
@@ -143,19 +143,19 @@ async fn test_everything(
         grants,
         vec![
             Grant {
-                owner: test_account_id.into(),
+                owner: test_public_key.clone(),
                 grantee: bob.into(),
                 data_id: "A1".into(),
                 locked_until: 0
             },
             Grant {
-                owner: test_account_id.into(),
+                owner: test_public_key.clone(),
                 grantee: bob.into(),
                 data_id: "A2".into(),
                 locked_until: 0
             },
             Grant {
-                owner: test_account_id.into(),
+                owner: test_public_key.clone(),
                 grantee: charlie.into(),
                 data_id: "A2".into(),
                 locked_until: 0
@@ -174,13 +174,13 @@ async fn test_everything(
         grants,
         vec![
             Grant {
-                owner: test_account_id.into(),
+                owner: test_public_key.clone(),
                 grantee: bob.into(),
                 data_id: "A1".into(),
                 locked_until: 0
             },
             Grant {
-                owner: test_account_id.into(),
+                owner: test_public_key.clone(),
                 grantee: bob.into(),
                 data_id: "A2".into(),
                 locked_until: 0
@@ -190,7 +190,7 @@ async fn test_everything(
 
     grants = test_account
         .call(contract.id(), "find_grants")
-        .args_json(json!({"owner": test_account_id, "grantee": bob}))
+        .args_json(json!({"owner": test_public_key, "grantee": bob}))
         .view()
         .await?
         .json::<Vec<Grant>>()
@@ -199,13 +199,13 @@ async fn test_everything(
         grants,
         vec![
             Grant {
-                owner: test_account_id.into(),
+                owner: test_public_key.clone(),
                 grantee: bob.into(),
                 data_id: "A1".into(),
                 locked_until: 0
             },
             Grant {
-                owner: test_account_id.into(),
+                owner: test_public_key.clone(),
                 grantee: bob.into(),
                 data_id: "A2".into(),
                 locked_until: 0
@@ -215,7 +215,7 @@ async fn test_everything(
 
     grants = test_account
         .call(contract.id(), "find_grants")
-        .args_json(json!({"owner": test_account_id, "data_id": "A2"}))
+        .args_json(json!({"owner": test_public_key, "data_id": "A2"}))
         .view()
         .await?
         .json::<Vec<Grant>>()
@@ -224,13 +224,13 @@ async fn test_everything(
         grants,
         vec![
             Grant {
-                owner: test_account_id.into(),
+                owner: test_public_key.clone(),
                 grantee: bob.into(),
                 data_id: "A2".into(),
                 locked_until: 0
             },
             Grant {
-                owner: test_account_id.into(),
+                owner: test_public_key.clone(),
                 grantee: charlie.into(),
                 data_id: "A2".into(),
                 locked_until: 0
@@ -248,7 +248,7 @@ async fn test_everything(
     assert_eq!(
         grants,
         vec![Grant {
-            owner: test_account_id.into(),
+            owner: test_public_key.clone(),
             grantee: bob.into(),
             data_id: "A1".into(),
             locked_until: 0
@@ -279,7 +279,7 @@ async fn test_everything(
                 "version": "0",
                 "event": "grant_deleted",
                 "data": {
-                    "owner": test_account_id,
+                    "owner": test_public_key,
                     "grantee": bob,
                     "data_id": "A1",
                     "locked_until": 0,
@@ -298,7 +298,7 @@ async fn test_everything(
     assert_eq!(
         grants,
         vec![Grant {
-            owner: test_account_id.into(),
+            owner: test_public_key.clone(),
             grantee: bob.into(),
             data_id: "A2".into(),
             locked_until: 0
@@ -316,7 +316,7 @@ async fn test_everything(
 
     grants = test_account
         .call(contract.id(), "find_grants")
-        .args_json(json!({ "owner": test_account_id }))
+        .args_json(json!({ "owner": test_public_key }))
         .view()
         .await?
         .json::<Vec<Grant>>()
@@ -325,13 +325,13 @@ async fn test_everything(
         grants,
         vec![
             Grant {
-                owner: test_account_id.into(),
+                owner: test_public_key.clone(),
                 grantee: bob.into(),
                 data_id: "A2".into(),
                 locked_until: 0
             },
             Grant {
-                owner: test_account_id.into(),
+                owner: test_public_key.clone(),
                 grantee: charlie.into(),
                 data_id: "A2".into(),
                 locked_until: 0
@@ -429,13 +429,13 @@ async fn test_everything(
         grants,
         vec![
             Grant {
-                owner: test_account_id.into(),
+                owner: test_public_key.clone(),
                 grantee: eve.into(),
                 data_id: "A3".into(),
                 locked_until: in_the_paster
             },
             Grant {
-                owner: test_account_id.into(),
+                owner: test_public_key.clone(),
                 grantee: eve.into(),
                 data_id: "A3".into(),
                 locked_until: in_the_pastest

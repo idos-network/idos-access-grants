@@ -3,14 +3,14 @@ use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::serde::Serialize;
 use near_sdk::serde_json::json;
 use near_sdk::store::LookupMap;
-use near_sdk::{env, near_bindgen, require, AccountId, EpochHeight, PublicKey};
+use near_sdk::{env, near_bindgen, require, EpochHeight, PublicKey};
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct FractalRegistry {
     pub grants_by_id: LookupMap<String, Grant>,
 
-    pub grant_ids_by_owner: LookupMap<AccountId, Vec<String>>,
+    pub grant_ids_by_owner: LookupMap<PublicKey, Vec<String>>,
     pub grant_ids_by_grantee: LookupMap<PublicKey, Vec<String>>,
     pub grant_ids_by_data_id: LookupMap<String, Vec<String>>,
 }
@@ -18,7 +18,7 @@ pub struct FractalRegistry {
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Clone)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Grant {
-    owner: AccountId,
+    owner: PublicKey,
     grantee: PublicKey,
     data_id: String,
     locked_until: EpochHeight,
@@ -29,15 +29,19 @@ pub struct Grant {
 fn derive_grant_id_example() {
     // Just to make sure we don't accidentally change the way we derive grant_ids.
 
-    let grant = Grant{
-        owner: "my-cool-account.near".parse().unwrap(),
-        grantee: "secp256k1:qMoRgcoXai4mBPsdbHi1wfyxF9TdbPCF4qSDQTRP3TfescSRoUdSx6nmeQoN3aiwGzwMyGXAb1gUjBTv5AY8DXj".parse().unwrap(),
+    let grant = Grant {
+        owner: "ed25519:BCUg4havhRURACQAFK48e6ScqcJgPbeqHbfcmNoWp3fZ"
+            .parse()
+            .unwrap(),
+        grantee: "ed25519:mrjrfx8wSA9pYyMEeMm2QnFe9ct1P8CRkmU55h8MxEi"
+            .parse()
+            .unwrap(),
         data_id: "some data".into(),
         locked_until: 1337,
     };
 
     assert_eq!(
-        "848a69fe2d9b5d82d92a56936aa00f499f7274e8233eedba07b676de9d4c91be",
+        "8031eff696fa15a7e4c69530a1d8b634faab8d512fde219b92aae0082adb8606",
         derive_grant_id(&grant)
     );
 }
@@ -45,7 +49,7 @@ fn derive_grant_id_example() {
 pub fn derive_grant_id(grant: &Grant) -> String {
     let id = format!(
         "{}{}{}{}",
-        grant.owner,
+        Into::<String>::into(&grant.owner),
         Into::<String>::into(&grant.grantee),
         grant.data_id,
         grant.locked_until,
@@ -78,7 +82,7 @@ impl FractalRegistry {
         data_id: String,
         locked_until: Option<EpochHeight>,
     ) {
-        let owner = env::predecessor_account_id();
+        let owner = env::signer_account_pk();
 
         let grant = Grant {
             owner: owner.clone(),
@@ -133,7 +137,7 @@ impl FractalRegistry {
         data_id: String,
         locked_until: Option<EpochHeight>,
     ) {
-        let owner = env::predecessor_account_id();
+        let owner = env::signer_account_pk();
 
         self.find_grants(
             Some(owner.clone()),
@@ -194,7 +198,7 @@ impl FractalRegistry {
 
     pub fn find_grants(
         &self,
-        owner: Option<AccountId>,
+        owner: Option<PublicKey>,
         grantee: Option<PublicKey>,
         data_id: Option<String>,
     ) -> Vec<Grant> {
