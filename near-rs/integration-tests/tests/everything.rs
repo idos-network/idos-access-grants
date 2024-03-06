@@ -1,67 +1,9 @@
-use lazy_static::lazy_static;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use std::{
-    env, fs,
-    time::{Duration, SystemTime, UNIX_EPOCH},
-};
-
-use near_workspaces::{network::Sandbox, types::SecretKey, Account, Contract, Worker};
-use serde::Deserialize;
 use serde_json::json;
 
-#[derive(Deserialize, Debug, PartialEq)]
-pub struct Grant {
-    owner: String,
-    grantee: String,
-    data_id: String,
-    locked_until: u128,
-}
-
-fn extract_public_key(secret_key: &SecretKey) -> String {
-    secret_key.public_key().to_string()
-}
-
-fn create_public_key() -> anyhow::Result<String> {
-    Ok(extract_public_key(&SecretKey::from_random(
-        near_workspaces::types::KeyType::ED25519,
-    )))
-}
-
-const EVENT_JSON_PREFIX: &'static str = "EVENT_JSON";
-const EVENT_JSON_SEPARATOR: &'static str = ":";
-fn extract_event(s: &str) -> serde_json::Value {
-    if let Some((EVENT_JSON_PREFIX, json_str)) = s.split_once(EVENT_JSON_SEPARATOR) {
-        if let Ok(json_value) = json_str.parse::<serde_json::Value>() {
-            return json_value;
-        }
-    }
-
-    panic!(
-        "Expected {:?} to start with {:?}, followed by {:?} and a valid JSON value.",
-        s, EVENT_JSON_PREFIX, EVENT_JSON_SEPARATOR
-    )
-}
-
-lazy_static! {
-    static ref WASM: Vec<u8> = {
-        let wasm_arg: String = env::var("CONTRACT_LOCATION").unwrap_or("../contract/target/wasm32-unknown-unknown/release/access_grants.wasm".into());
-        let wasm_filepath = fs::canonicalize(env::current_dir().unwrap().join(wasm_arg)).unwrap();
-        std::fs::read(wasm_filepath).unwrap()
-    };
-}
-
-async fn scenario_base() -> anyhow::Result<(Worker<Sandbox>, Contract, Account)> {
-    let worker = near_workspaces::sandbox().await?;
-    let contract = worker.dev_deploy(&WASM).await?;
-    let test_account = worker
-        .dev_create_account()
-        .await?
-        .create_subaccount("test")
-        .transact()
-        .await?
-        .into_result()?;
-    Ok((worker, contract, test_account))
-}
+mod helpers;
+use helpers::{create_public_key, scenario_base, Grant, extract_event};
 
 #[tokio::test]
 async fn test_everything() -> anyhow::Result<()> {
