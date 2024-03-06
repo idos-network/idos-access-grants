@@ -412,6 +412,5 @@ async fn test_everything() -> anyhow::Result<()> {
     )
     .contains("Required argument: `owner` and/or `grantee`"));
 
-    println!("      Passed ✅ test_everything");
     Ok(())
 }
