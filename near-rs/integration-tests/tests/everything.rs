@@ -8,10 +8,10 @@ use helpers::{create_public_key, scenario_base, Grant, extract_event};
 #[tokio::test]
 async fn test_everything() -> anyhow::Result<()> {
     let (_, contract, test_account) = scenario_base().await?;
-    let bob: &str = &create_public_key()?;
-    let charlie: &str = &create_public_key()?;
-    let dave: &str = &create_public_key()?;
-    let eve: &str = &create_public_key()?;
+    let bob: &str = &create_public_key();
+    let charlie: &str = &create_public_key();
+    let dave: &str = &create_public_key();
+    let eve: &str = &create_public_key();
     let mut result;
     let mut grants;
     let test_public_key: String = test_account.secret_key().public_key().to_string();

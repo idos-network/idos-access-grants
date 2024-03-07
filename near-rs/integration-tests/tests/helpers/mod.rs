@@ -17,10 +17,10 @@ pub fn extract_public_key(secret_key: &SecretKey) -> String {
     secret_key.public_key().to_string()
 }
 
-pub fn create_public_key() -> anyhow::Result<String> {
-    Ok(extract_public_key(&SecretKey::from_random(
+pub fn create_public_key() -> String {
+    extract_public_key(&SecretKey::from_random(
         near_workspaces::types::KeyType::ED25519,
-    )))
+    ))
 }
 
 const EVENT_JSON_PREFIX: &'static str = "EVENT_JSON";
