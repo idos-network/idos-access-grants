@@ -158,6 +158,36 @@ pub enum FractalRegistryEvents {
     },
 }
 
+fn nep413_verify(
+    message: String,
+    nonce: Vec<u8>,
+    recipient: String,
+    signature: Vec<u8>,
+    owner: &PublicKey,
+) {
+    require!(
+        owner.curve_type() == CurveType::ED25519,
+        "Only ed25519 keys are supported",
+    );
+
+    // Serde didn't have [u8; 64] implemented, only up to 32. So, I've decided to convert them inside the function.
+    let nonce: [u8; 32] = *u8_to_fixed_length_array!(nonce.as_slice());
+    let signature: [u8; 64] = *u8_to_fixed_length_array!(signature.as_slice());
+
+
+    let hashed_payload = nep413_hashed_payload(&Nep413Payload {
+        message: message,
+        nonce,
+        recipient,
+        callback_url: None,
+    });
+
+    require!(
+        env::ed25519_verify(&signature, &hashed_payload, public_key_bytes_ref(owner),),
+        "Signature doesn't match"
+    );
+}
+
 #[near_bindgen]
 impl FractalRegistry {
     pub fn grant_message_recipient(&self) -> String {
@@ -202,36 +232,17 @@ impl FractalRegistry {
         nonce: Vec<u8>,
         signature: Vec<u8>,
     ) {
-        require!(
-            owner.curve_type() == CurveType::ED25519,
-            "Only ed25519 keys are supported",
-        );
-
-        // Serde didn't have [u8; 64] implemented, only up to 32. So, I've decided to convert them inside the function.
-        let nonce: [u8; 32] = *u8_to_fixed_length_array!(nonce.as_slice());
-        let signature: [u8; 64] = *u8_to_fixed_length_array!(signature.as_slice());
-
-        let message = self.insert_grant_by_signature_message(
-            owner.clone(),
-            grantee.clone(),
-            data_id.clone(),
-            locked_until,
-        );
-
-        let hashed_payload = nep413_hashed_payload(&Nep413Payload {
-            message,
-            nonce,
-            recipient: self.grant_message_recipient(),
-            callback_url: None,
-        });
-
-        require!(
-            env::ed25519_verify(
-                &signature,
-                &hashed_payload,
-                public_key_bytes_ref(&owner),
+        nep413_verify(
+            self.insert_grant_by_signature_message(
+                owner.clone(),
+                grantee.clone(),
+                data_id.clone(),
+                locked_until,
             ),
-            "Signature doesn't match"
+            nonce,
+            self.grant_message_recipient(),
+            signature,
+            &owner,
         );
 
         self._insert_grant(owner, grantee, data_id, locked_until)
@@ -324,36 +335,17 @@ impl FractalRegistry {
         nonce: Vec<u8>,
         signature: Vec<u8>,
     ) {
-        require!(
-            owner.curve_type() == CurveType::ED25519,
-            "Only ed25519 keys are supported",
-        );
-
-        // Serde didn't have [u8; 64] implemented, only up to 32. So, I've decided to convert them inside the function.
-        let nonce: [u8; 32] = *u8_to_fixed_length_array!(nonce.as_slice());
-        let signature: [u8; 64] = *u8_to_fixed_length_array!(signature.as_slice());
-
-        let message = self.delete_grant_by_signature_message(
-            owner.clone(),
-            grantee.clone(),
-            data_id.clone(),
-            locked_until,
-        );
-
-        let hashed_payload = nep413_hashed_payload(&Nep413Payload {
-            message,
-            nonce,
-            recipient: self.grant_message_recipient(),
-            callback_url: None,
-        });
-
-        require!(
-            env::ed25519_verify(
-                &signature,
-                &hashed_payload,
-                public_key_bytes_ref(&owner),
+        nep413_verify(
+            self.delete_grant_by_signature_message(
+                owner.clone(),
+                grantee.clone(),
+                data_id.clone(),
+                locked_until,
             ),
-            "Signature doesn't match"
+            nonce,
+            self.grant_message_recipient(),
+            signature,
+            &owner,
         );
 
         self._delete_grant(owner, grantee, data_id, locked_until)
