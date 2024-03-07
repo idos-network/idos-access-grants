@@ -1,7 +1,7 @@
 use serde_json::json;
 
 mod helpers;
-use helpers::{create_public_key, create_secret_key, extract_public_key, scenario_base, Grant};
+use helpers::{create_public_key, scenario_base, Grant};
 
 mod assert;
 
@@ -9,28 +9,29 @@ mod nep413;
 
 #[tokio::test]
 async fn happy_path() -> anyhow::Result<()> {
-    let (_, contract, test_account) = scenario_base().await?;
+    let (worker, contract, some_other_account) = scenario_base().await?;
 
-    let owner_sk = create_secret_key();
-    let owner = extract_public_key(&owner_sk);
+    let (owner_id, owner_sk) = worker.dev_generate().await;
+    let owner_account = worker
+        .create_tla(owner_id.clone(), owner_sk.clone())
+        .await?
+        .unwrap();
+    let owner = owner_sk.public_key();
 
     let grantee = create_public_key();
     let data_id: String = "DATA_ID".into();
     let locked_until = 0;
     let nonce = nep413::generate_nonce();
 
-    assert_eq!(
-        test_account
-            .call(contract.id(), "find_grants")
-            .args_json(json!({"owner": owner, "grantee": grantee}))
-            .view()
-            .await?
-            .json::<Vec<Grant>>()
-            .unwrap(),
-        vec![]
+    assert::transaction_success(
+        owner_account
+            .call(contract.id(), "insert_grant")
+            .args_json(json!({"grantee": grantee, "data_id": data_id}))
+            .transact()
+            .await?,
     );
 
-    let recipient = test_account
+    let recipient = some_other_account
         .call(contract.id(), "grant_message_recipient")
         .args_json(json!({}))
         .view()
@@ -38,8 +39,8 @@ async fn happy_path() -> anyhow::Result<()> {
         .json::<String>()
         .unwrap();
 
-    let message = test_account
-        .call(contract.id(), "insert_grant_by_signature_message")
+    let message = some_other_account
+        .call(contract.id(), "delete_grant_by_signature_message")
         .args_json(json!({
             "owner": owner,
             "grantee": grantee,
@@ -62,8 +63,8 @@ async fn happy_path() -> anyhow::Result<()> {
     );
 
     assert::transaction_success(
-        test_account
-            .call(contract.id(), "insert_grant_by_signature")
+        some_other_account
+            .call(contract.id(), "delete_grant_by_signature")
             .args_json(json!({
                 "owner": owner,
                 "grantee": grantee,
@@ -77,19 +78,14 @@ async fn happy_path() -> anyhow::Result<()> {
     );
 
     assert_eq!(
-        test_account
+        some_other_account
             .call(contract.id(), "find_grants")
             .args_json(json!({"owner": owner, "grantee": grantee}))
             .view()
             .await?
             .json::<Vec<Grant>>()
             .unwrap(),
-        vec![Grant {
-            owner,
-            grantee,
-            data_id,
-            locked_until,
-        }]
+        vec![],
     );
 
     Ok(())
@@ -107,7 +103,7 @@ async fn wrong_signature() -> anyhow::Result<()> {
 
     assert::transaction_failure(
         test_account
-            .call(contract.id(), "insert_grant_by_signature")
+            .call(contract.id(), "delete_grant_by_signature")
             .args_json(json!({
                 "owner": owner,
                 "grantee": grantee,

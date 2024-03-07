@@ -160,6 +160,10 @@ pub enum FractalRegistryEvents {
 
 #[near_bindgen]
 impl FractalRegistry {
+    pub fn grant_message_recipient(&self) -> String {
+        "idos.network".into()
+    }
+
     pub fn insert_grant(
         &mut self,
         grantee: PublicKey,
@@ -187,10 +191,6 @@ impl FractalRegistry {
             data_id,
             locked_until.unwrap_or(0)
         )
-    }
-
-    pub fn grant_message_recipient(&self) -> String {
-        "idos.network".into()
     }
 
     pub fn insert_grant_by_signature(
@@ -292,8 +292,80 @@ impl FractalRegistry {
         data_id: String,
         locked_until: Option<EpochHeight>,
     ) {
-        let owner = env::signer_account_pk();
+        self._delete_grant(env::signer_account_pk(), grantee, data_id, locked_until)
+    }
 
+    pub fn delete_grant_by_signature_message(
+        &self,
+        owner: PublicKey,
+        grantee: PublicKey,
+        data_id: String,
+        locked_until: Option<EpochHeight>,
+    ) -> String {
+        format!(
+            "operation: deleteGrant\n\
+            owner: {}\n\
+            grantee: {}\n\
+            dataId: {}\n\
+            lockedUntil: {}",
+            Into::<String>::into(&owner),
+            Into::<String>::into(&grantee),
+            data_id,
+            locked_until.unwrap_or(0)
+        )
+    }
+
+    pub fn delete_grant_by_signature(
+        &mut self,
+        owner: PublicKey,
+        grantee: PublicKey,
+        data_id: String,
+        locked_until: Option<EpochHeight>,
+        nonce: Vec<u8>,
+        signature: Vec<u8>,
+    ) {
+        require!(
+            owner.curve_type() == CurveType::ED25519,
+            "Only ed25519 keys are supported",
+        );
+
+        // Serde didn't have [u8; 64] implemented, only up to 32. So, I've decided to convert them inside the function.
+        let nonce: [u8; 32] = *u8_to_fixed_length_array!(nonce.as_slice());
+        let signature: [u8; 64] = *u8_to_fixed_length_array!(signature.as_slice());
+
+        let message = self.delete_grant_by_signature_message(
+            owner.clone(),
+            grantee.clone(),
+            data_id.clone(),
+            locked_until,
+        );
+
+        let hashed_payload = nep413_hashed_payload(&Nep413Payload {
+            message,
+            nonce,
+            recipient: self.grant_message_recipient(),
+            callback_url: None,
+        });
+
+        require!(
+            env::ed25519_verify(
+                &signature,
+                &hashed_payload,
+                public_key_bytes_ref(&owner),
+            ),
+            "Signature doesn't match"
+        );
+
+        self._delete_grant(owner, grantee, data_id, locked_until)
+    }
+
+    fn _delete_grant(
+        &mut self,
+        owner: PublicKey,
+        grantee: PublicKey,
+        data_id: String,
+        locked_until: Option<EpochHeight>,
+    ) {
         self.find_grants(
             Some(owner.clone()),
             Some(grantee.clone()),
