@@ -51,15 +51,13 @@ async fn happy_path() -> anyhow::Result<()> {
         .json::<String>()
         .unwrap();
 
-    let signature = nep413::sign(
-        owner_sk,
-        nep413::Payload {
-            message,
-            nonce,
-            recipient,
-            callback_url: None,
-        },
-    );
+    let signature = nep413::Payload {
+        message,
+        nonce,
+        recipient,
+        callback_url: None,
+    }
+    .sign_with(owner_sk);
 
     assert::transaction_success(
         test_account
