@@ -18,6 +18,9 @@ tracing-subscriber = { version = "0.3.11", features = ["env-filter"] }
 near-workspaces = "0.8.0"
 pkg-config = "0.3.1"
 lazy_static = "1.4.0"
+ring = "0.17.8"
+rand = "0.8.5"
+near-crypto = "0.20.1"
 
 [[example]]
 name = "integration-tests"

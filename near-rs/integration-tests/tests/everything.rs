@@ -3,7 +3,10 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use serde_json::json;
 
 mod helpers;
-use helpers::{create_public_key, scenario_base, Grant, extract_event};
+use helpers::{create_public_key, scenario_base, Grant};
+
+mod events;
+use events::extract_event;
 
 #[tokio::test]
 async fn test_everything() -> anyhow::Result<()> {
