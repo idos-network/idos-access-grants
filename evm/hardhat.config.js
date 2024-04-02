@@ -7,12 +7,17 @@ module.exports = {
   networks: {
     sepolia: {
       url: process.env.SEPOLIA_NODE_URL,
-      accounts: [process.env.SEPOLIA_PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY],
+    },
+    arbitrumSepolia: {
+      url: process.env.ARBITRUM_SEPOLIA_NODE_URL,
+      accounts: [process.env.PRIVATE_KEY],
     },
   },
   etherscan: {
     apiKey: {
       sepolia: process.env.SEPOLIA_ETHERSCAN_API_KEY,
+      arbitrumSepolia: process.env.ARBITRUM_SEPOLIA_ETHERSCAN_API_KEY,
     },
   },
   sourcify: {
