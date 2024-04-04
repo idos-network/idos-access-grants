@@ -28,6 +28,7 @@ The contract functionality is straightforward:
 | :- | :- | :- |
 | `evm/` | Sepolia | [`0x73de8f45c0dFDf59C56a93B483246AC113a1f922`](https://sepolia.etherscan.io/address/0x73de8f45c0dFDf59C56a93B483246AC113a1f922#code) |
 | `evm/` | Arbitrum Sepolia | [`0x7D11563Bd4aA096CC83Fbe2cdd0557010dd58477`](https://sepolia.arbiscan.io/address/0x7D11563Bd4aA096CC83Fbe2cdd0557010dd58477#code) |
+| `evm/` | Arbitrum One | [`0x7D11563Bd4aA096CC83Fbe2cdd0557010dd58477`](https://arbiscan.io/address/0x7D11563Bd4aA096CC83Fbe2cdd0557010dd58477#code) |
 | `near-rs/` | NEAR Testnet | [`idos-dev-2.testnet`](https://explorer.testnet.near.org/accounts/idos-dev-2.testnet) |
 | `near-rs/` | NEAR Mainnet | [`idos-dev-2.near`](https://explorer.mainnet.near.org/accounts/idos-dev-2.near) |
 
