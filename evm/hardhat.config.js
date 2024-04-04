@@ -21,11 +21,16 @@ module.exports = {
       url: process.env.ARBITRUM_SEPOLIA_NODE_URL,
       accounts: [process.env.PRIVATE_KEY],
     },
+    arbitrumOne: {
+      url: process.env.ARBITRUM_ONE_NODE_URL,
+      accounts: [process.env.PRIVATE_KEY],
+    }
   },
   etherscan: {
     apiKey: {
       sepolia: process.env.SEPOLIA_ETHERSCAN_API_KEY,
-      arbitrumSepolia: process.env.ARBITRUM_SEPOLIA_ETHERSCAN_API_KEY,
+      arbitrumSepolia: process.env.ARBITRUM_ETHERSCAN_API_KEY,
+      arbitrumOne: process.env.ARBITRUM_ETHERSCAN_API_KEY,
     },
   },
   sourcify: {
