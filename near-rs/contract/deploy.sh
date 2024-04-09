@@ -14,4 +14,4 @@ echo ">> Deploying contract"
 
 #NEAR_ENV=testnet ./node_modules/.bin/near --wasmFile ./target/wasm32-unknown-unknown/release/access_grants.wasm --accountId idos-dev-2.testnet
 
-NEAR_ENV=mainnet ./node_modules/.bin/near --wasmFile ./target/wasm32-unknown-unknown/release/access_grants.wasm --accountId idos-dev-2.near
+NEAR_ENV=testnet ../node_modules/.bin/near deploy idos-dev-4.testnet ./target/wasm32-unknown-unknown/release/access_grants.wasm
