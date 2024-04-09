@@ -30,7 +30,7 @@ The contract functionality is straightforward:
 | `evm/` | Arbitrum Sepolia | [`0x7D11563Bd4aA096CC83Fbe2cdd0557010dd58477`](https://sepolia.arbiscan.io/address/0x7D11563Bd4aA096CC83Fbe2cdd0557010dd58477#code) |
 | `evm/` | Arbitrum One | [`0x7D11563Bd4aA096CC83Fbe2cdd0557010dd58477`](https://arbiscan.io/address/0x7D11563Bd4aA096CC83Fbe2cdd0557010dd58477#code) |
 | `near-rs/` | NEAR Testnet | [`idos-dev-4.testnet`](https://explorer.testnet.near.org/accounts/idos-dev-4.testnet) |
-| `near-rs/` | NEAR Mainnet | (old code version) [`idos-dev-2.near`](https://explorer.mainnet.near.org/accounts/idos-dev-2.near) |
+| `near-rs/` | NEAR Mainnet | [`idos-dev-4.near`](https://explorer.mainnet.near.org/accounts/idos-dev-4.near) |
 
 ### Deploy to Sepolia
 
