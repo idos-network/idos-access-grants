@@ -2,9 +2,9 @@
 artifacts/*
 !artifacts/contracts
 artifacts/contracts/*
-!artifacts/contracts/AccessGrants.sol
-artifacts/contracts/AccessGrants.sol/*
-!artifacts/contracts/AccessGrants.sol/AccessGrants.json
+!artifacts/contracts/AccessGrantsV1.sol
+artifacts/contracts/AccessGrantsV1.sol/*
+!artifacts/contracts/AccessGrantsV1.sol/AccessGrantsV1.json
 
 cache
 node_modules
