@@ -1,10 +1,7 @@
 # ugh
 artifacts/*
 !artifacts/contracts
-artifacts/contracts/*
-!artifacts/contracts/AccessGrantsV1.sol
-artifacts/contracts/AccessGrantsV1.sol/*
-!artifacts/contracts/AccessGrantsV1.sol/AccessGrantsV1.json
+artifacts/contracts/*/*.dbg.json
 
 cache
 node_modules

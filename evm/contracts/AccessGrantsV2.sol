@@ -285,4 +285,8 @@ contract AccessGrantsV2 is OwnableUpgradeable, UUPSUpgradeable {
     ) private pure returns (bool) {
         return keccak256(abi.encodePacked((dataId))) == _WILDCARD_DATA_ID;
     }
+
+    function ping() public pure returns (string memory) {
+        return "pong";
+    }
 }

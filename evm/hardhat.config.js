@@ -36,6 +36,6 @@ module.exports = {
     },
   },
   sourcify: {
-    enabled: true,
+    enabled: false,
   },
 };
