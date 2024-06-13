@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.19;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract AccessGrants {
+contract AccessGrantsV1 is OwnableUpgradeable, UUPSUpgradeable {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
     struct Grant {
@@ -23,8 +26,6 @@ contract AccessGrants {
 
     bytes32 private constant _WILDCARD_DATA_ID = keccak256(abi.encodePacked("0"));
 
-    constructor() {}
-
     event GrantAdded(
         address indexed owner,
         address indexed grantee,
@@ -38,6 +39,19 @@ contract AccessGrants {
         string  indexed dataId,
         uint256         lockedUntil
     );
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize() public initializer {
+        __Ownable_init(msg.sender);
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal onlyOwner override {
+
+    }
 
     function insertGrantBySignatureMessage(
         address owner,
@@ -72,7 +86,7 @@ contract AccessGrants {
         require(
             SignatureChecker.isValidSignatureNow(
                 owner,
-                ECDSA.toEthSignedMessageHash(
+                MessageHashUtils.toEthSignedMessageHash(
                     bytes(insertGrantBySignatureMessage(
                         owner,
                         grantee,
@@ -112,7 +126,7 @@ contract AccessGrants {
         require(
             SignatureChecker.isValidSignatureNow(
                 owner,
-                ECDSA.toEthSignedMessageHash(
+                MessageHashUtils.toEthSignedMessageHash(
                     bytes(deleteGrantBySignatureMessage(
                         owner,
                         grantee,
