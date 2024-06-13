@@ -26,9 +26,9 @@ The contract functionality is straightforward:
 
 | Source | Chain | Address |
 | :- | :- | :- |
-| `evm/` | Sepolia | [`0x73de8f45c0dFDf59C56a93B483246AC113a1f922`](https://sepolia.etherscan.io/address/0x73de8f45c0dFDf59C56a93B483246AC113a1f922#code) |
-| `evm/` | Arbitrum Sepolia | [`0x7D11563Bd4aA096CC83Fbe2cdd0557010dd58477`](https://sepolia.arbiscan.io/address/0x7D11563Bd4aA096CC83Fbe2cdd0557010dd58477#code) |
-| `evm/` | Arbitrum One | [`0x7D11563Bd4aA096CC83Fbe2cdd0557010dd58477`](https://arbiscan.io/address/0x7D11563Bd4aA096CC83Fbe2cdd0557010dd58477#code) |
+| `evm/` | Sepolia | [`0xA5Ac9B9703Bd661cd2aC05B41FE57d1A5DD332AA`](https://sepolia.etherscan.io/address/0xA5Ac9B9703Bd661cd2aC05B41FE57d1A5DD332AA#code) |
+| `evm/` | Arbitrum Sepolia | [`0x350829c8FCb3DF16EeaE9ADDa2565090348426f9`](https://sepolia.arbiscan.io/address/0x350829c8FCb3DF16EeaE9ADDa2565090348426f9#code) |
+| `evm/` | Arbitrum One | [`0x350829c8FCb3DF16EeaE9ADDa2565090348426f9`](https://arbiscan.io/address/0x350829c8FCb3DF16EeaE9ADDa2565090348426f9#code) |
 | `near-rs/` | NEAR Testnet | [`idos-dev-4.testnet`](https://explorer.testnet.near.org/accounts/idos-dev-4.testnet) |
 | `near-rs/` | NEAR Mainnet | [`idos-dev-4.near`](https://explorer.mainnet.near.org/accounts/idos-dev-4.near) |
 
