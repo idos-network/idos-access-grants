@@ -34,8 +34,5 @@ module.exports = {
       arbitrumSepolia: process.env.ARBITRUM_ETHERSCAN_API_KEY,
       arbitrumOne: process.env.ARBITRUM_ETHERSCAN_API_KEY,
     },
-  },
-  sourcify: {
-    enabled: false,
-  },
+  }
 };
