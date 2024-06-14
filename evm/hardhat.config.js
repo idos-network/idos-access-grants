@@ -26,6 +26,10 @@ module.exports = {
     arbitrumOne: {
       url: process.env.ARBITRUM_ONE_NODE_URL,
       accounts: [process.env.PRIVATE_KEY],
+    },
+    etherlinkTestnet: {
+      url: "https://node.ghostnet.etherlink.com",
+      accounts: [process.env.PRIVATE_KEY],
     }
   },
   etherscan: {
@@ -33,6 +37,17 @@ module.exports = {
       sepolia: process.env.SEPOLIA_ETHERSCAN_API_KEY,
       arbitrumSepolia: process.env.ARBITRUM_ETHERSCAN_API_KEY,
       arbitrumOne: process.env.ARBITRUM_ETHERSCAN_API_KEY,
+      etherlinkTestnet: "YOU_CAN_COPY_ME",
     },
+    customChains: [
+      {
+        network: "etherlinkTestnet",
+        chainId: 128123,
+        urls: {
+          apiURL: "https://testnet-explorer.etherlink.com/api",
+          browserURL: "https://testnet-explorer.etherlink.com"
+        }
+      },
+    ]
   }
 };
