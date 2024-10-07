@@ -24,15 +24,15 @@ The contract functionality is straightforward:
 
 **Deployments:**
 
-| Source | Chain | Address | Used by idOS nodes |
+| Source | Chain (`ID`) | Address | Used by idOS nodes |
 | :- | :- | :- | :- |
-| `evm/` | Sepolia | [`0xA5Ac9B9703Bd661cd2aC05B41FE57d1A5DD332AA`](https://sepolia.etherscan.io/address/0xA5Ac9B9703Bd661cd2aC05B41FE57d1A5DD332AA#code) | nodes.idos.network |
-| `evm/` | Arbitrum Sepolia | [`0x350829c8FCb3DF16EeaE9ADDa2565090348426f9`](https://sepolia.arbiscan.io/address/0x350829c8FCb3DF16EeaE9ADDa2565090348426f9#code) | nodes.playground.idos.network |
-| `evm/` | Arbitrum One | [`0x350829c8FCb3DF16EeaE9ADDa2565090348426f9`](https://arbiscan.io/address/0x350829c8FCb3DF16EeaE9ADDa2565090348426f9#code) | nodes.idos.network |
-| `evm/` | Etherlink Testnet | [`0xeed5537b68baD728A3Bb433d8e06ebab81ac0EAB`](https://testnet-explorer.etherlink.com/address/0xeed5537b68baD728A3Bb433d8e06ebab81ac0EAB?tab=contract) | nodes.playground.idos.network |
-| `evm/` | Etherlink | [`0xeed5537b68baD728A3Bb433d8e06ebab81ac0EAB`](https://explorer.etherlink.com/address/0xeed5537b68baD728A3Bb433d8e06ebab81ac0EAB?tab=contract) | nodes.idos.network |
-| `near-rs/` | NEAR Testnet | [`idos-dev-4.testnet`](https://explorer.testnet.near.org/accounts/idos-dev-4.testnet) | nodes.playground.idos.network |
-| `near-rs/` | NEAR Mainnet | [`idos-dev-4.near`](https://explorer.mainnet.near.org/accounts/idos-dev-4.near) | nodes.idos.network |
+| `evm/` | Sepolia (`0xaa36a7`) | [`0xA5Ac9B9703Bd661cd2aC05B41FE57d1A5DD332AA`](https://sepolia.etherscan.io/address/0xA5Ac9B9703Bd661cd2aC05B41FE57d1A5DD332AA#code) | nodes.idos.network |
+| `evm/` | Arbitrum Sepolia (`0x66eee`) | [`0x350829c8FCb3DF16EeaE9ADDa2565090348426f9`](https://sepolia.arbiscan.io/address/0x350829c8FCb3DF16EeaE9ADDa2565090348426f9#code) | nodes.playground.idos.network |
+| `evm/` | Arbitrum One (`0xa4b1`) | [`0x350829c8FCb3DF16EeaE9ADDa2565090348426f9`](https://arbiscan.io/address/0x350829c8FCb3DF16EeaE9ADDa2565090348426f9#code) | nodes.idos.network |
+| `evm/` | Etherlink Testnet (`0x1f47b`) | [`0xeed5537b68baD728A3Bb433d8e06ebab81ac0EAB`](https://testnet-explorer.etherlink.com/address/0xeed5537b68baD728A3Bb433d8e06ebab81ac0EAB?tab=contract) | nodes.playground.idos.network |
+| `evm/` | Etherlink (`0xa729`) | [`0xeed5537b68baD728A3Bb433d8e06ebab81ac0EAB`](https://explorer.etherlink.com/address/0xeed5537b68baD728A3Bb433d8e06ebab81ac0EAB?tab=contract) | nodes.idos.network |
+| `near-rs/` | NEAR Testnet (`testnet`) | [`idos-dev-4.testnet`](https://explorer.testnet.near.org/accounts/idos-dev-4.testnet) | nodes.playground.idos.network |
+| `near-rs/` | NEAR Mainnet (`mainnet`) | [`idos-dev-4.near`](https://explorer.mainnet.near.org/accounts/idos-dev-4.near) | nodes.idos.network |
 
 ### Deploy to Sepolia
 
