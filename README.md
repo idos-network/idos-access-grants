@@ -15,14 +15,14 @@ The contract functionality is straightforward:
 
 ## Contracts
 
-**Implementations:**
+### Implementations
 
 | Target VM | Language | Source |
 | :- | :- | :- |
 | EVM | Solidity | [`evm/`](./evm) |
 | NEAR VM | Rust | [`near-rs/`](./near-rs) |
 
-**Deployments:**
+## Deployments
 
 | Source | Chain (`ID`) | Address | Used by idOS nodes |
 | :- | :- | :- | :- |
