@@ -26,8 +26,8 @@ The contract functionality is straightforward:
 
 | Source | Chain (`ID`) | Address | Used by idOS nodes |
 | :- | :- | :- | :- |
-| `evm/` | Sepolia (`0xaa36a7`) | [`0x11Fe2099B205388ED95BB0e52e424512eb43692f`](https://sepolia.etherscan.io/address/0x11Fe2099B205388ED95BB0e52e424512eb43692f#code) | nodes.playground.idos.network |
-| `evm/` | Sepolia (`0xaa36a7`) | [`0xA5Ac9B9703Bd661cd2aC05B41FE57d1A5DD332AA`](https://sepolia.etherscan.io/address/0xA5Ac9B9703Bd661cd2aC05B41FE57d1A5DD332AA#code) | nodes.idos.network |
+| `evm/` | Ethereum Sepolia (`0xaa36a7`) | [`0x11Fe2099B205388ED95BB0e52e424512eb43692f`](https://sepolia.etherscan.io/address/0x11Fe2099B205388ED95BB0e52e424512eb43692f#code) | nodes.playground.idos.network |
+| `evm/` | Ethereum Sepolia (`0xaa36a7`) | [`0xA5Ac9B9703Bd661cd2aC05B41FE57d1A5DD332AA`](https://sepolia.etherscan.io/address/0xA5Ac9B9703Bd661cd2aC05B41FE57d1A5DD332AA#code) | nodes.idos.network |
 | `evm/` | Arbitrum Sepolia (`0x66eee`) | [`0x350829c8FCb3DF16EeaE9ADDa2565090348426f9`](https://sepolia.arbiscan.io/address/0x350829c8FCb3DF16EeaE9ADDa2565090348426f9#code) | nodes.playground.idos.network |
 | `evm/` | Arbitrum One (`0xa4b1`) | [`0x350829c8FCb3DF16EeaE9ADDa2565090348426f9`](https://arbiscan.io/address/0x350829c8FCb3DF16EeaE9ADDa2565090348426f9#code) | nodes.idos.network |
 | `evm/` | Etherlink Testnet (`0x1f47b`) | [`0xeed5537b68baD728A3Bb433d8e06ebab81ac0EAB`](https://testnet-explorer.etherlink.com/address/0xeed5537b68baD728A3Bb433d8e06ebab81ac0EAB?tab=contract) | nodes.playground.idos.network |
