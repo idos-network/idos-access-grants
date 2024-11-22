@@ -29,14 +29,14 @@ contract AccessGrantsV2 is OwnableUpgradeable, UUPSUpgradeable {
     event GrantAdded(
         address indexed owner,
         address indexed grantee,
-        string  indexed dataId,
+        string          dataId,
         uint256         lockedUntil
     );
 
     event GrantDeleted(
         address indexed owner,
         address indexed grantee,
-        string  indexed dataId,
+        string          dataId,
         uint256         lockedUntil
     );
 
